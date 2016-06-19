@@ -1,21 +1,7 @@
-# 
-#  This file is part of Herschel Common Science System (HCSS).
-#  Copyright 2001-2012 Herschel Science Ground Segment Consortium
-# 
-#  HCSS is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU Lesser General Public License as
-#  published by the Free Software Foundation, either version 3 of
-#  the License, or (at your option) any later version.
-# 
-#  HCSS is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#  GNU Lesser General Public License for more details.
-# 
-#  You should have received a copy of the GNU Lesser General
-#  Public License along with HCSS.
-#  If not, see <http://www.gnu.org/licenses/>.
-# 
+"""
+Red-leak script test for non-solar system objects.
+"""
+
 """
 VERSION     
   $Id: L05_Frames.py,v 1.48 2015/10/15 18:39:45 jdejong Exp $      <do not touch. This field is changed by CVS>
@@ -65,72 +51,61 @@ HISTORY
 
 """
 from herschel.pacs.signal import SlicedFrames
-from herschel.pacs.signal.context import *
 from herschel.pacs.spg.common import *
 from herschel.pacs.spg.spec import *
 from herschel.pacs.cal import *
 from herschel.ia.numeric import *
 from herschel.ia.jconsole import *
-from herschel.pacs.spg.pipeline import *  
+from herschel.pacs.signal.context import *
+from herschel.pacs.spg.pipeline.spg_spec_tools import *
+from herschel.pacs.spg.pipeline import *
+from herschel.pacs.signal.context import *
+from herschel.pacs.cal import GetPacsCalDataTask
+from herschel.pacs.spg.pipeline.ProductSinkHandling import *
 
-#*******************************************************************************
-# Preparation
-#*******************************************************************************
-#
-#--------------------------------------------------------------------------------
-# SETUP 1: 
-#    red or blue camera? This the user has to set before running the script, using the command e.g.
-#       > camera = "blue" 
-#    the try/except here will set the camera to "blue" if it has not already been defined
-try:
-    camera
-except NameError:
-    camera = 'blue'
 
-# Checks for a particular type of anomaly (H_SC-70 DECMEC) and adds a quality flag if found.
-# (This refers to a loss of data, and if this quality flag became set while the SPG was running 
-# on your data, then your data would have gone through an extra quality control.) 
-# If the anomaly is present, then a Meta Data entry "qflag_DMANOG4L_p" will be added to obs, and 
-# a flag is added to the "quality" of obs.
-obs = checkForAnomaly70(obs)
+camera = 'red'
 
+if ((not locals().has_key('multiObs')) or (not multiObs)):
+    obsid = 1342250905
+
+# Get data from pool file will improve time response
+useHsa = 1
+obs = getObservation(obsid, verbose = True, useHsa = useHsa,\
+                     poolLocation = None, poolName = None)
+
+
+# Do we need this?
+# Checks for a particular type of anomaly (H_SC-70 DECMEC) and adds a quality 
+# flag if found. (This refers to a loss of data, and if this quality flag became
+# set while the SPG was running on your data, then your data would have gone
+# through an extra quality control.) 
+# If the anomaly is present, then a Meta Data entry "qflag_DMANOG4L_p" will be 
+#dded to obs, and a flag is added to the "quality" of obs.
+# obs = checkForAnomaly70(obs)
+
+# It is really needed?
 # filter meta keywords and update descriptions
 modifyMetaData(obs)
 
 # add extra meta data 
 pacsEnhanceMetaData(obs)
 
-#    
-# copy the metadata from the ObservationContext to the level0 product
-pacsPropagateMetaKeywords(obs,'0', obs.level0)
-#
-# Extract the level0 from the ObservationContext 
+pacsPropagateMetaKeywords(obs,'0', obs.level0) 
 level0 = PacsContext(obs.level0)
 level0 = level0.updateContextType()
 obs.level0 = level0
 
-#
 # Extract the pointing product
 pp = obs.auxiliary.pointing
-#
 # Extract the orbit ephemeris information
 orbitEphem = obs.auxiliary.orbitEphemeris
-#
 # Extract Time Correlation which is used to convert in addUtc
 timeCorr = obs.auxiliary.timeCorrelation
 
-
-#-------------------------------------------------------------------------------------------
-# SETUP 2:
-# Set up the calibration tree. 
-# First check whether calTree already exists, since it could have been filled by the SPG pipeline 
-# If not, then take it from your current HIPE build, and then put it into the ObservationContext 
-#  so that it is stored there for future reference
-try:
-    calTree
-except NameError:
-    calTree = getCalTree(obs=obs)
-    obs.calibration = calTree
+# Calibration tree.
+calTree = getCalTree(version=76)
+obs.calibration = calTree
 
 #
 # Extract the Horizons product
@@ -150,101 +125,92 @@ slicedDmcHead = level0.dmc.getCamera(camera).product
 
 
 #
-# ***********************************************************************************
+# ******************************************************************************
 #         Processing
-# ***********************************************************************************
+# ******************************************************************************
 # 
-# Flag the saturated data in a mask "SATURATION" (and "RAWSATURATION": this exploits 
-#  the raw ramps downlinked for a single pixel of the data array)
+# Flag the saturated data in a mask "SATURATION" (and "RAWSATURATION": this 
+# exploits the raw ramps downlinked for a single pixel of the data array)
 # used cal files: RampSatLimits and SignalSatLimits
 # copy=1 makes slicedFrames a fully independent product
-slicedFrames = specFlagSaturationFrames(slicedFrames, rawRamp = slicedRawRamp, calTree=calTree, copy=1)
-#
+slicedFrames = specFlagSaturationFrames(slicedFrames, rawRamp = slicedRawRamp,\
+                                        calTree = calTree, copy=1)
+
 # Convert digital units to Volts, used cal file: Readouts2Volts
-slicedFrames = specConvDigit2VoltsPerSecFrames(slicedFrames, calTree=calTree)
-#
+slicedFrames = specConvDigit2VoltsPerSecFrames(slicedFrames, calTree = calTree)
+
 # Identifies the calibration blocks and fills the CALSOURCE status entry
 slicedFrames = detectCalibrationBlock(slicedFrames)
-#
+
 # This tasks adds the time information in UTC to the status
 slicedFrames = addUtc(slicedFrames, timeCorr)
-#   
+   
 # Add the pointing information of the central spaxel to the Status
 #   Uses the pointing, horizons product (solar system object ephemeries), 
 #   orbitEphemeris products, and the SIAM cal file.
-slicedFrames = specAddInstantPointing(slicedFrames, pp, calTree = calTree, orbitEphem = orbitEphem, horizonsProduct = hp)    
+slicedFrames = specAddInstantPointing(slicedFrames, pp, calTree = calTree,\
+                                      orbitEphem = orbitEphem,\
+                                      horizonsProduct = hp)    
 #copy the saa meta keyword to the ObservationContext meta HCSS-SCR 19230
 obs.meta["solarAspectAngleMean"] = slicedFrames.meta["solarAspectAngleMean"].copy()
 obs.meta["solarAspectAngleRms"] = slicedFrames.meta["solarAspectAngleRms"].copy()
-#
-# If SSO, move SSO target to a fixed position in sky. This is needed for mapping SSOs.
-if (isSolarSystemObject(obs)):
-  slicedFrames = correctRaDec4Sso (slicedFrames, orbitEphem=orbitEphem, horizonsProduct=hp, linear=0)
-#
+
 # This task extends the Status of Frames with the parameters GRATSCAN, CHOPPER, CHOPPOS
 # used cal file: ChopperThrowDescription
-slicedFrames = specExtendStatus(slicedFrames, calTree=calTree)
-#
+slicedFrames = specExtendStatus(slicedFrames, calTree = calTree)
+
 # This task converts the chopper readouts to an angle wrt. focal plane unit and the sky
 # and adds this to the status, used cal file: ChopperAngle and ChopperSkyAngle
-slicedFrames = convertChopper2Angle(slicedFrames, calTree=calTree)
-#
+slicedFrames = convertChopper2Angle(slicedFrames, calTree = calTree)
+
 # This task adds the positions for each pixel (Ra and Dec dataset) 
 # used cal files: ArrayInstrument and ModuleArray
-slicedFrames = specAssignRaDec(slicedFrames, calTree=calTree)
-#
+slicedFrames = specAssignRaDec(slicedFrames, calTree = calTree)
+
 # This task adds the wavelength for each pixel (Wave dataset), used cal file: WavePolynomes
-slicedFrames = waveCalc(slicedFrames, calTree=calTree)
-#
-# This task corrects the wavelength for the s/c velocity, uses the pointing, orbitEphemeris and TimeCorrelation product
-slicedFrames = specCorrectHerschelVelocity(slicedFrames, orbitEphem, pp, timeCorr, horizonsProduct = hp)
-#
-# Find the major blocks of this observation and organise it in the block table attached to the Frames
-# used cal file: ObcpDescription
+slicedFrames = waveCalc(slicedFrames, calTree = calTree)
+
+# This task corrects the wavelength for the s/c velocity, uses the pointing,
+# orbitEphemeris and TimeCorrelation product
+slicedFrames = specCorrectHerschelVelocity(slicedFrames, orbitEphem, pp,\
+                                           timeCorr, horizonsProduct = hp)
+
+# Find the major blocks of this observation and organise it in the block table
+# attached to the Frames used cal file: ObcpDescription
 slicedFrames = findBlocks(slicedFrames, calTree = calTree)
 #
-# This task flags the known bad or noisy pixels in the mask "BADPIXELS" and "NOISYPIXELS"
-# used cal files: BadPixelMask and NoisyPixelMask
-slicedFrames = specFlagBadPixelsFrames(slicedFrames, calTree=calTree)
+# This task flags the known bad or noisy pixels in the mask "BADPIXELS" and 
+# "NOISYPIXELS" used cal files: BadPixelMask and NoisyPixelMask
+slicedFrames = specFlagBadPixelsFrames(slicedFrames, calTree = calTree)
 #
-# Slice the data by Line/Range, Raster Point, nod position, nod cycle, on/off position and per band. 
+# Slice the data by Line/Range, Raster Point, nod position, nod cycle, on/off 
+# position and per band. 
 # The parameters removeUndefined and removeMasked are for cleaning purposes
-slicedFrames, additionalOutContexts = pacsSliceContext(slicedFrames,[slicedDmcHead],removeUndefined=True, removeMasked=True, spgMode = True)
+slicedFrames, additionalOutContexts = pacsSliceContext(slicedFrames,\
+                                                       [slicedDmcHead],\
+                                                       removeUndefined = True,\
+                                                       removeMasked = True,\
+                                                       spgMode = True)
 slicedDmcHead = additionalOutContexts[0]
-# This task flags the data effected by the chopper movement in the mask "UNCLEANCHOP"
-# it uses the high resolution Dec/Mec header and the cal files ChopperAngle and ChopperJitterThreshold 
-slicedFrames = flagChopMoveFrames(slicedFrames, dmcHead=slicedDmcHead, calTree=calTree)
-#
-# This task flags the data affected by the grating movement in the mask "GRATMOVE"
-# it uses the high resolution Dec/Mec header and the cal file GratingJitterThreshold 
-slicedFrames = flagGratMoveFrames(slicedFrames, dmcHead=slicedDmcHead, calTree=calTree)
+# This task flags the data effected by the chopper movement in the mask
+# "UNCLEANCHOP" it uses the high resolution Dec/Mec header and the cal files
+# ChopperAngle and ChopperJitterThreshold 
+slicedFrames = flagChopMoveFrames(slicedFrames, dmcHead = slicedDmcHead,\
+                                  calTree = calTree)
 
+# This task flags the data affected by the grating movement in the mask
+# "GRATMOVE" it uses the high resolution Dec/Mec header and the cal file 
+# GratingJitterThreshold 
+slicedFrames = flagGratMoveFrames(slicedFrames, dmcHead = slicedDmcHead,\
+                                  calTree = calTree)
 
-#
 # Update of the observation context
 obs = updatePacsObservation(obs, 0.5, [slicedFrames, slicedDmcHead])
 
 # remove some variables (clean-up of memory)
-del pp, orbitEphem, slicedDmcHead, slicedFrames, slicedRawRamp, timeCorr, hp, level0, additionalOutContexts
+del pp, orbitEphem, slicedDmcHead, slicedFrames, slicedRawRamp, timeCorr, hp
+del level0, additionalOutContexts
 
-# 
-#  This file is part of Herschel Common Science System (HCSS).
-#  Copyright 2001-2010 Herschel Science Ground Segment Consortium
-# 
-#  HCSS is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU Lesser General Public License as
-#  published by the Free Software Foundation, either version 3 of
-#  the License, or (at your option) any later version.
-# 
-#  HCSS is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#  GNU Lesser General Public License for more details.
-# 
-#  You should have received a copy of the GNU Lesser General
-#  Public License along with HCSS.
-#  If not, see <http://www.gnu.org/licenses/>.
-# 
 """
 VERSION     
   $Id: L1_ChopNod.py,v 1.40 2015/10/15 18:39:45 jdejong Exp $      <do not touch. This field is changed by CVS>
@@ -292,45 +258,10 @@ HISTORY
   2009-07-16 JS 1.2 introduce slicing   
   2013-04-04 KME improve comments
 """
-from herschel.pacs.spg.pipeline import *
-from herschel.pacs.spg.spec import *
-from herschel.pacs.spg.common import *
-from herschel.pacs.signal.context import *
-from herschel.pacs.cal import GetPacsCalDataTask
-from herschel.pacs.spg.common import SlicingRule
-from herschel.ia.numeric import *
-from herschel.pacs.spg.pipeline.spg_spec_tools import *
-
-#*******************************************************************************
-# Preparation
-#*******************************************************************************
-
-# SETUP 1: 
-#    red or blue camera? This the user has to set before running the script, using the command e.g.
-#       > camera = "blue" 
-#    the try/except here will set the camera to "blue" if it has not already been defined
-try:
-    camera
-except NameError:
-    camera = 'blue'
 
 # Extract the (previously-reduced and saved) level 0_5 out of the ObservationContext
 level0_5 = PacsContext(obs.level0_5)
 
-
-#
-# SETUP 2:
-# Set up the calibration tree. 
-# First check whether calTree already exists, since it could have been filled by the SPG pipeline 
-# If not, then take it from your current HIPE build, and then put it into the ObservationContext 
-#  so that it is stored there for future reference
-try:
-    calTree
-except NameError:
-    calTree = getCalTree(obs=obs)
-    obs.calibration = calTree
-#
-#
 # extract the frames for your camera
 slicedFrames = level0_5.fitted.getCamera(camera).product
 
@@ -382,25 +313,6 @@ obs = updatePacsObservation(obs, 1.0, [slicedFrames, slicedCubes])
 # Remove some variables (memory clean-up)
 del slicedFrames, slicedCubes, level0_5
 
-# 
-#  This file is part of Herschel Common Science System (HCSS).
-#  Copyright 2001-2011 Herschel Science Ground Segment Consortium
-# 
-#  HCSS is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU Lesser General Public License as
-#  published by the Free Software Foundation, either version 3 of
-#  the License, or (at your option) any later version.
-# 
-#  HCSS is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#  GNU Lesser General Public License for more details.
-# 
-#  You should have received a copy of the GNU Lesser General
-#  Public License along with HCSS.
-#  If not, see <http://www.gnu.org/licenses/>.
-# 
-
 """
 VERSION     
   $Id: L2_ChopNod.py,v 1.78 2016/06/14 16:27:22 jdejong Exp $      <do not touch. This field is changed by CVS>
@@ -447,53 +359,20 @@ HISTORY
   2009-07-16 JS 1.2 introduce slicing  
   2013-04-04 KME improve comments 
 """
-from herschel.pacs.spg.pipeline import *
-from herschel.pacs.signal.context import *
-from herschel.pacs.cal import GetPacsCalDataTask
-from herschel.pacs.spg.spec import *
-from herschel.ia.numeric import *
-from herschel.pacs.spg.pipeline import *  
-from herschel.pacs.spg.pipeline.ProductSinkHandling import *
-from herschel.pacs.spg.pipeline.spg_spec_tools import *
-
-#
-#*******************************************************************************
-# Preparation
-#*******************************************************************************
-#
-# SETUP 1: 
-#    red or blue camera? This the user has to set before running the script, using the command e.g.
-#       > camera = "blue" 
-#    the try/except here will set the camera to "blue" if it has not already been defined
-try:
-    camera
-except NameError:
-    camera = 'blue'
-    
 # Always use the product sink for this script
 sink.setUsed(True)
 
 # Extract the (previously-reduced and saved) level 1 out of the ObservationContext
 level1 = PacsContext(obs.level1)
 
-
-# SETUP 2:
-# Set up the calibration tree. 
-# First check whether calTree already exists, since it could have been filled by the SPG pipeline 
-# If not, then take it from your current HIPE build, and then put it into the ObservationContext 
-#  so that it is stored there for future reference
-try:
-    calTree
-except NameError:
-    calTree = getCalTree(obs=obs)
-    obs.calibration = calTree
-
-
 # extract level1 frames  and cubes for your camera   
 slicedCubes = level1.cube.getCamera(camera).product
 slicedFrames = level1.fitted.getCamera(camera).product
 # Computes the telescope background flux and scales the normalized signal with the telescope background flux using asymmetric chopping
-slicedFramesCal, background = specRespCalToTelescope(slicedFrames, obs.auxiliary.hk, calTree = calTree, reduceNoise=1, copy=1)
+slicedFramesCal, background = specRespCalToTelescope(slicedFrames, 
+                                                     obs.auxiliary.hk,\
+                                                     calTree = calTree, 
+                                                     reduceNoise = 1, copy = 1)
 # convert the Frames to a PacsCube
 slicedCubesCal = specFrames2PacsCube(slicedFramesCal)     
 # compute ra/dec meta keywords
@@ -516,48 +395,36 @@ copyCube = True
 lineSpec = isLineSpec(slicedCubes)
 shortRange = isShortRange(obs)
 maskNotFF = False
-if lineSpec or shortRange:
-    ffUpsample = getUpsample(obs)
-        
-    # 1. Flag outliers and rebin
-    waveGrid=wavelengthGrid(slicedCubes, oversample=2, upsample=ffUpsample, calTree=calTree)
-    slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "BADPIXELS", "INVALID"]), exclusive = True, copy = copyCube)
-    slicedCubesCal = activateMasks(slicedCubesCal, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "BADPIXELS", "INVALID"]), exclusive = True, copy = copyCube)
-    copyCube = False
-    slicedCubes = specFlagOutliers(slicedCubes, waveGrid, nSigma=5, nIter=1)
-    slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid, nSigma=5, nIter=1)
-    slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "OUTLIERS", "BADPIXELS", "INVALID"]), exclusive = True)
-    slicedRebinnedCubes = specWaveRebin(slicedCubes, waveGrid)
-    slicedCubes = selectSlices(slicedCubes,refContext=slicedRebinnedCubes)
-    slicedCubesCal = selectSlices(slicedCubesCal,refContext=slicedRebinnedCubes)
 
-    width = 2.5
-    if isRangeSpec(obs):
-        width = 1.5
+ffUpsample = getUpsample(obs)
         
-    # 2. mask the line
-    slicedCubes = maskLines(slicedCubes,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0,maskType="INLINE")
-    slicedCubesCal = maskLines(slicedCubesCal,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0,maskType="INLINE")
-    # 3. do the flatfielding
-    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[55.,190.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
-    slicedCubesCal = specFlatFieldLine(slicedCubesCal, calTree = calTree, scaling=1, maxrange=[55.,190.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
-    # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse to overwrite OUTLIERS) & deactivate mask INLINE
-    slicedCubes.renameMask("OUTLIERS", "OUTLIERS_B4FF")
-    slicedCubes = deactivateMasks(slicedCubes, String1d(["INLINE", "OUTLIERS_B4FF"]))
-    slicedCubesCal.renameMask("OUTLIERS", "OUTLIERS_B4FF")
-    slicedCubesCal = deactivateMasks(slicedCubesCal, String1d(["INLINE", "OUTLIERS_B4FF"]))
-    del ffUpsample, width
-elif isRangeSpec(obs):
-    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=True, calTree = calTree, copy = copyCube)
-    slicedFramesCal = specFlatFieldRange(slicedFramesCal,useSplinesModel=True, excludeLeaks=True, calTree = calTree, copy = copyCube)
-    copyCube = False
-    maskNotFF = True
-    slicedCubes = specFrames2PacsCube(slicedFrames)
-    slicedCubesCal = specFrames2PacsCube(slicedFramesCal)
-    slicedCubes = centerRaDecMetaData(slicedCubes)
-    slicedCubesCal = centerRaDecMetaData(slicedCubesCal)
+# 1. Flag outliers and rebin
+waveGrid=wavelengthGrid(slicedCubes, oversample=2, upsample=ffUpsample, calTree=calTree)
+slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "BADPIXELS", "INVALID"]), exclusive = True, copy = copyCube)
+slicedCubesCal = activateMasks(slicedCubesCal, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "BADPIXELS", "INVALID"]), exclusive = True, copy = copyCube)
+copyCube = False
+slicedCubes = specFlagOutliers(slicedCubes, waveGrid, nSigma=5, nIter=1)
+slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid, nSigma=5, nIter=1)
+slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "OUTLIERS", "BADPIXELS", "INVALID"]), exclusive = True)
+slicedRebinnedCubes = specWaveRebin(slicedCubes, waveGrid)
+slicedCubes = selectSlices(slicedCubes,refContext=slicedRebinnedCubes)
+slicedCubesCal = selectSlices(slicedCubesCal,refContext=slicedRebinnedCubes)
 
-    
+width = 2.5    
+# 217 was the maximum acceptable value?
+# 2. mask the line
+slicedCubes = maskLines(slicedCubes,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0,maskType="INLINE")
+slicedCubesCal = maskLines(slicedCubesCal,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0,maskType="INLINE")
+# 3. do the flatfielding
+slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[55.,217.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
+slicedCubesCal = specFlatFieldLine(slicedCubesCal, calTree = calTree, scaling=1, maxrange=[55.,217.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
+# 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse to overwrite OUTLIERS) & deactivate mask INLINE
+slicedCubes.renameMask("OUTLIERS", "OUTLIERS_B4FF")
+slicedCubes = deactivateMasks(slicedCubes, String1d(["INLINE", "OUTLIERS_B4FF"]))
+slicedCubesCal.renameMask("OUTLIERS", "OUTLIERS_B4FF")
+slicedCubesCal = deactivateMasks(slicedCubesCal, String1d(["INLINE", "OUTLIERS_B4FF"]))
+del ffUpsample, width
+
 # Building the wavelength grids for each slice
 # Used cal file: wavelengthGrid
 upsample = getUpsample(obs)
@@ -664,3 +531,5 @@ copyCube, lineSpec, shortRange, maskNotFF, upsample, waveGrid, masksForRebinning
 
 # restore default sink state
 restoreOldSinkState()
+
+# Must plot the values? Or save them?

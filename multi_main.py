@@ -86,14 +86,16 @@ History :
 """
 import os
 import time
+import shutil
 
 multiObs = 1
 save_obs = False
 
 # saveIndividualObsids : 
 # 0 - only the global spectrum is saved
-# 1 - the slicedCubes, slicedRebinnedCubes & final spectra are saved for every obsid
-# in all cases, the final, combined set of spectra is saved (i.e. for all bands) 
+# 1 - the slicedCubes, slicedRebinnedCubes & final spectra are saved for every 
+# obsid in all cases, the final, combined set of spectra is saved (i.e. for 
+# all bands) 
 saveIndividualObsids = 1
 
 # In that script there are some parameters that you may need to change, including:
@@ -171,12 +173,16 @@ for obsid in obsids.keys():
             saveSlicedCopy(slicedCubes, nameBasis + "_slicedCubes",\
                            poolLocation = working_dir)
         except IOError:
-            print "IOError"
+            shutil.rmtree(working_dir + str(nameBasis) + "_slicedCubes")
+            saveSlicedCopy(slicedCubes, nameBasis + "_slicedCubes",\
+                           poolLocation = working_dir)
         try:
             saveSlicedCopy(slicedRebinnedCubes, nameBasis + "_RebinnedCubes",\
                            poolLocation = working_dir)
         except IOError:
-            print "IOError"
+            shutil.rmtree(working_dir + str(nameBasis) + "_RebinnedCubes")
+            saveSlicedCopy(slicedCubes, nameBasis + "_RebinnedCubes",\
+                           poolLocation = working_dir)
 
         """
         saveSlicedCopy(slicedFinalCubes, nameBasis + "_FinalCubes",\
@@ -190,8 +196,8 @@ for obsid in obsids.keys():
 
     # Gather the final spectra in one single structure, later easier to 
     # handle, save & plot
-    theseFinalCubes = getSlicedCopy(slicedFinalCubes)
-    finalCubeList.append(theseFinalCubes)
+    # theseFinalCubes = getSlicedCopy(slicedFinalCubes)
+    # finalCubeList.append(theseFinalCubes)
 
 """
 # Merge all finalCubes into one single slicedProduct

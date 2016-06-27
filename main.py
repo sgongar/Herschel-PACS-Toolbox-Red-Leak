@@ -377,34 +377,60 @@ if lineSpec or shortRange:
                                           "SATURATION", "GRATMOVE", "BADPIXELS",\
                                           "INVALID"]), exclusive = True,\
                                                        copy = copyCube)
-    slicedCubesCal = activateMasks(slicedCubesCal, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "BADPIXELS", "INVALID"]), exclusive = True, copy = copyCube)
+    slicedCubesCal = activateMasks(slicedCubesCal,\
+                                   String1d(["GLITCH", "UNCLEANCHOP",\
+                                             "NOISYPIXELS", "RAWSATURATION",\
+                                             "SATURATION", "GRATMOVE", "BADPIXELS",\
+                                             "INVALID"]), exclusive = True,\
+                                                          copy = copyCube)
     copyCube = False
     slicedCubes = specFlagOutliers(slicedCubes, waveGrid, nSigma = 5, nIter = 1)
-    slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid, nSigma = 5, nIter = 1)
-    slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "OUTLIERS", "BADPIXELS", "INVALID"]), exclusive = True)
+    slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid, nSigma = 5,\
+                                      nIter = 1)
+    slicedCubes = activateMasks(slicedCubes,\
+                                String1d(["GLITCH", "UNCLEANCHOP",\
+                                          "NOISYPIXELS", "RAWSATURATION",\
+                                          "SATURATION", "GRATMOVE",\
+                                          "OUTLIERS", "BADPIXELS",\
+                                          "INVALID"]), exclusive = True)
     slicedRebinnedCubes = specWaveRebin(slicedCubes, waveGrid)
-    slicedCubes = selectSlices(slicedCubes,refContext = slicedRebinnedCubes)
-    slicedCubesCal = selectSlices(slicedCubesCal, refContext = slicedRebinnedCubes)
+    slicedCubes = selectSlices(slicedCubes,\
+                              refContext = slicedRebinnedCubes)
+    slicedCubesCal = selectSlices(slicedCubesCal,\
+                                  refContext = slicedRebinnedCubes)
 
     width = 2.5
     if isRangeSpec(obs):
         width = 1.5
         
     # 2. mask the line !!!!!!!!!!!!!!!!!!!
-    slicedCubes = maskLines(slicedCubes, slicedRebinnedCubes, calTree = calTree, widthDetect = width, widthMask = width, threshold = 10.0, maskType = "INLINE")
-    slicedCubesCal = maskLines(slicedCubesCal, slicedRebinnedCubes, calTree = calTree, widthDetect = width, widthMask = width, threshold = 10.0, maskType = "INLINE")
+    slicedCubes = maskLines(slicedCubes, slicedRebinnedCubes,\
+                            calTree = calTree, widthDetect = width,\
+                            widthMask = width, threshold = 10.0,\
+                            maskType = "INLINE")
+    slicedCubesCal = maskLines(slicedCubesCal, slicedRebinnedCubes,\
+                               calTree = calTree, widthDetect = width,\
+                               widthMask = width, threshold = 10.0,\
+                               maskType = "INLINE")
     # 3. do the flatfielding
-    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling = 1, maxrange = [55.,190.], slopeInContinuum = 1, maxScaling = 2., maskType = "OUTLIERS_FF", offset = 0)
-    slicedCubesCal = specFlatFieldLine(slicedCubesCal, calTree = calTree, scaling = 1, maxrange = [55.,190.], slopeInContinuum = 1, maxScaling = 2., maskType = "OUTLIERS_FF", offset = 0)
+    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree,\
+                                    scaling = 1, maxrange = [55.,190.],\
+                                    slopeInContinuum = 1, maxScaling = 2.,\
+                                    maskType = "OUTLIERS_FF", offset = 0)
+    slicedCubesCal = specFlatFieldLine(slicedCubesCal, calTree = calTree,\
+                                       scaling = 1, maxrange = [55.,190.],\
+                                       slopeInContinuum = 1, maxScaling = 2.,\
+                                       maskType = "OUTLIERS_FF", offset = 0)
     # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse to overwrite OUTLIERS) & deactivate mask INLINE
     slicedCubes.renameMask("OUTLIERS", "OUTLIERS_B4FF")
     slicedCubes = deactivateMasks(slicedCubes, String1d(["INLINE", "OUTLIERS_B4FF"]))
     slicedCubesCal.renameMask("OUTLIERS", "OUTLIERS_B4FF")
     slicedCubesCal = deactivateMasks(slicedCubesCal, String1d(["INLINE", "OUTLIERS_B4FF"]))
-    del ffUpsample, width
+    # del ffUpsample, width
+
 elif isRangeSpec(obs):
-    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=True, calTree = calTree, copy = copyCube)
-    slicedFramesCal = specFlatFieldRange(slicedFramesCal,useSplinesModel=True, excludeLeaks=True, calTree = calTree, copy = copyCube)
+    slicedFrames = specFlatFieldRange(slicedFrames, useSplinesModel = True, excludeLeaks = True, calTree = calTree, copy = copyCube)
+    slicedFramesCal = specFlatFieldRange(slicedFramesCal, useSplinesModel = True, excludeLeaks = True, calTree = calTree, copy = copyCube)
     copyCube = False
     maskNotFF = True
     slicedCubes = specFrames2PacsCube(slicedFrames)
@@ -416,18 +442,29 @@ elif isRangeSpec(obs):
 # Building the wavelength grids for each slice
 # Used cal file: wavelengthGrid
 upsample = getUpsample(obs)
-waveGrid=wavelengthGrid(slicedCubes, oversample=2, upsample = upsample, calTree = calTree)
+waveGrid = wavelengthGrid(slicedCubes, oversample = 2, upsample = upsample,\
+                          calTree = calTree)
 
 # Active masks 
-slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","SATURATION","GRATMOVE", "BADFITPIX", "BADPIXELS"]), exclusive = True, copy = copyCube)
-slicedCubesCal = activateMasks(slicedCubesCal, String1d(["GLITCH","UNCLEANCHOP","SATURATION","GRATMOVE", "BADFITPIX", "BADPIXELS"]), exclusive = True, copy = copyCube)
+slicedCubes = activateMasks(slicedCubes,\
+                            String1d(["GLITCH", "UNCLEANCHOP", "SATURATION",\
+                                      "GRATMOVE", "BADFITPIX",\
+                                      "BADPIXELS"]), exclusive = True,\
+                                                     copy = copyCube)
+slicedCubesCal = activateMasks(slicedCubesCal,\
+                               String1d(["GLITCH", "UNCLEANCHOP", "SATURATION",\
+                                         "GRATMOVE", "BADFITPIX",\
+                                         "BADPIXELS"]), exclusive = True,\
+                                                        copy = copyCube)
 
 # Flag the remaining outliers (sigma-clipping in wavelength domain), with default parameters here
 slicedCubes = specFlagOutliers(slicedCubes, waveGrid)
 slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid)
 
 # Rebin all cubes on consistent wavelength grids
-masksForRebinning = String1d(["OUTOFBAND", "GLITCH", "UNCLEANCHOP", "SATURATION", "GRATMOVE", "BADFITPIX", "OUTLIERS", "BADPIXELS"])
+masksForRebinning = String1d(["OUTOFBAND", "GLITCH", "UNCLEANCHOP",\
+                              "SATURATION", "GRATMOVE", "BADFITPIX",\
+                              "OUTLIERS", "BADPIXELS"])
 
 masksForRebinning.append("NOTFFED")
 slicedCubes = activateMasks(slicedCubes, masksForRebinning, exclusive = True)

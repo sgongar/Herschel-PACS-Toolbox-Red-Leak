@@ -1,3 +1,4 @@
+# coding = utf-8
 # 
 #  This file is part of Herschel Common Science System (HCSS).
 #  Copyright 2001-2013 Herschel Science Ground Segment Consortium
@@ -41,7 +42,7 @@ WARNING:
   Unlike most of the other interactive pipeline scripts, this one will not run
   "out of the box". Before you use it, you will need to carefully review the 
   input & output variables and tune them to your wishes (obsids.py, script,
-  scriptDir, outputDir, ...)
+  scriptDir, output_dir, ...)
   You are also encouraged to copy the pipeline script you want to run to another
   location on disk and edit the necessary parameters, and run that version here.
   If you use the default pipeline script from the build without any edition, 
@@ -69,9 +70,10 @@ Description:
    that is processed. This is defined by the variable "objectName" and can
    of course be modified
  - by default, this script will save all data (intermediate and final, in pools
-   or in fits files), to the directory specified by 'outputDir'.
-   You can change that back to the default behaviour (all pools to "$HOME/.hcss/lstore")
-   by simply removing the statement "poolLocation=outputDir" from the calls to
+   or in fits files), to the directory specified by 'output_dir'.
+   You can change that back to the default behaviour (all pools to 
+   "$HOME/.hcss/lstore")
+   by simply removing the statement "poolLocation=output_dir" from the calls to
    saveSlicedCopy
 
 Author:
@@ -82,12 +84,11 @@ History :
   2013-04-04 v2 PR - include correct3x3 version of final spectra
 	 	KE - revision of documentation and comments
 """
-import os, time
+import os
+import time
 
-##### START #####
-# Define the 'multiObs' variable, used by the interactive script 
-# to branch between interactive and multi-OBSID processing
 multiObs = 1
+save_obs = False
 
 # saveIndividualObsids : 
 # 0 - only the global spectrum is saved
@@ -95,16 +96,6 @@ multiObs = 1
 # in all cases, the final, combined set of spectra is saved (i.e. for all bands) 
 saveIndividualObsids = 1
 
-
-##############################################
-###### You need to edit parameters here ######
-##############################################
-# The pipeline script you will want to run via this multiobs script will be found in
-# [where-ever hipe has been put]/scripts/pacs/scripts/ipipe/spec/
-# aka: 
-# HCSS_DIR = Configuration.getProperty("var.hcss.dir")
-# scriptsDir =  HCSS_DIR + "/scripts/pacs/scripts/ipipe/spec/"
-#
 # In that script there are some parameters that you may need to change, including:
 # -verbose
 # -useHsa
@@ -113,13 +104,8 @@ saveIndividualObsids = 1
 #   are not in your local store, which is usually the directory [HOME]/.hcss/lstore
 # -And the parameters of the pipeline tasks that you, via earlier testing, have determined are 
 #   best for your observations
-# To run the default script, type:
-HCSS_DIR = Configuration.getProperty("var.hcss.dir")
-scriptsDir =  HCSS_DIR + "/scripts/pacs/scripts/ipipe/spec/"
-script = scriptsDir + "ChopNodBackgroundNormalizationRange.py"
-# But we recommend you instead do something similar to 
 
-# Chose the obsids
+# Chose the obsids TEMP - Change them with ESAC data
 obsids = {}
 obsids[1342229701] = "SEDA" 
 obsids[1342229702] = "SEDB"
@@ -127,74 +113,89 @@ obsids[1342229702] = "SEDB"
 # The few pipeline parameters you can set here:
 # Rebinning Parameters
 oversample = 2
-upsample   = 2
-strovup = "ov"+str(oversample)+"_up"+str(upsample)
+upsample = 2
+strovup = "ov" + str(oversample) + "_up" + str(upsample)
 
-######################################################
-###### You need to edit parameters here as well ######
-######################################################
+start_time = time.time()
 
+output_dir = '/home/sgongar/Documentos/Development/Herschel-PACS-Toolbox-Red-Leak/'
+working_dir = '/home/sgongar/Documentos/Development/Herschel-PACS-Toolbox-Red-Leak/pacsSpecOut/'
+pool_dir = '/home/sgongar/Documentos/Development/Herschel-PACS-Toolbox-Red-Leak/pools/'
 
-# Example: outputDir = "/home/me/Herschel/PacsSpectro/pipelineOutput/"
-# When saveOutput is True, nameBasis will be used as basis for the filenames of all outputs
-outputDir  = str(Configuration.getWorkDir())+"/pacsSpecOut/"
-if (not os.path.exists(outputDir)): os.mkdir(outputDir)
+script = output_dir + 'main.py'
 
-prefix=""
-if outputDir: prefix = outputDir+"/"
+if (not os.path.exists(working_dir)):
+    os.mkdir(working_dir)
+if (not os.path.exists(pool_dir)):
+    os.mkdir(pool_dir)
 
 # For traceability, you can use the buildNumber in the file or directory name
-buildNumber = str(Configuration.getProjectInfo().track) + '.' + str(Configuration.getProjectInfo().build)
+buildNumber = str(Configuration.getProjectInfo().track) + '.' +\
+              str(Configuration.getProjectInfo().build)
 
 # Create file for tracking the progress
-trackfilename = prefix+"ChopNodSEDMultiObsTracking.txt"
-trackfile = open(trackfilename,'w')
-trackfile.write("START \n")
-trackfile.close()
+trackfilename = working_dir + "RedLeakMultiObs.txt"
+trackfile = open(trackfilename, 'w')
 
+trackfile.write("Starting process at %s \n" %(start_time))
+trackfile.close()
 
 # Structure holding the final cubes for every pair [obsid,camera]
 finalCubeList = []
 
-starttime = time.time()
-
-
-############################################################
-##### Run the pipeline over all the cameras and obsids #####
-############################################################
+# Run pipeline over obs
 for obsid in obsids.keys():
-	for camera in ["blue","red"]:
-		# print outs to keep you up to date with progress
-		print
-		print "START ", obsid, camera
-		print
-		#target = obsids[obsid].split("_")[0]
-		trackfile = open(trackfilename,'a')
-		trackfile.write("START " + str(obsid) + " " + camera + "\n")
-		trackfile.close()
-		obsidstarttime = time.time()
-		#
-		# Process the observation
-		# -----------------------
-		execfile(script)
-		#
-		# Save the results
-		nameBasis = "OBSID_"+str(obsid)+"_"+obsids[obsid]+"_"+camera+"_"+buildNumber.replace('.','_')+"_"+strovup
-		if saveIndividualObsids:
-			saveSlicedCopy(slicedCubes, nameBasis+"_slicedCubes", poolLocation=outputDir)
-			saveSlicedCopy(slicedRebinnedCubes, nameBasis+"_RebinnedCubes", poolLocation=outputDir)
-			saveSlicedCopy(slicedFinalCubes, nameBasis+"_FinalCubes", poolLocation=outputDir)
-		#
-		trackfile = open(trackfilename,'a')
-		trackfile.write("END   " + str(obsid) + " " + camera + " Duration: "+ str("%7.1f\n" % (time.time() - obsidstarttime)) +"\n")
-		trackfile.close()
-		#
-		# Gather the final spectra in one single structure, later easier to handle, save & plot
-		theseFinalCubes = getSlicedCopy(slicedFinalCubes)
-		finalCubeList.append(theseFinalCubes)
+    camera = 'red'
+    # Next, get the data
+    obs = getObservation(obsid, verbose = True, useHsa = 1,\
+                         poolLocation = None, poolName = None)
+    if save_obs:
+        saveObservation(obs, poolLocation = pool_dir,\
+                        poolName = 'red_leak_pool')
 
+    # print outs to keep you up to date with progress
+    actual_time = time.time()
+    trackfile = open(trackfilename,'a')
+    trackfile.write("Processing observation " + str(obsid) +\
+                    " with camera " + camera + " at " + str(actual_time) +\
+                    "\n")
+    trackfile.close()
+    # Process the observation
+    execfile(script)
+        
+    # Save the results
+    nameBasis = "OBSID_" + str(obsid) + "_" + obsids[obsid] + "_" +\
+                camera + "_" + buildNumber.replace('.','_') + "_" + strovup
+    if saveIndividualObsids:
+        try:
+            saveSlicedCopy(slicedCubes, nameBasis + "_slicedCubes",\
+                           poolLocation = working_dir)
+        except IOError:
+            print "IOError"
+        try:
+            saveSlicedCopy(slicedRebinnedCubes, nameBasis + "_RebinnedCubes",\
+                           poolLocation = working_dir)
+        except IOError:
+            print "IOError"
+
+        """
+        saveSlicedCopy(slicedFinalCubes, nameBasis + "_FinalCubes",\
+                       poolLocation = working_dir)
+        """
+
+    trackfile = open(trackfilename, 'a')
+    trackfile.write("End " + str(obsid) + " " + camera + " Duration: " +\
+                    str("%7.1f\n" % (time.time() - actual_time)) + "\n")
+    trackfile.close()
+
+    # Gather the final spectra in one single structure, later easier to 
+    # handle, save & plot
+    theseFinalCubes = getSlicedCopy(slicedFinalCubes)
+    finalCubeList.append(theseFinalCubes)
+
+"""
 # Merge all finalCubes into one single slicedProduct
-allFinalCubes = concatenateSliced(finalCubeList)
+# allFinalCubes = concatenateSliced(finalCubeList)
 
 # save the final result in a single pool
 objectName = "NoObjectName"
@@ -204,7 +205,7 @@ try:
 except:
 	pass
 name = objectName + "_ChopNodMultiObs_allFinalCubes"
-saveSlicedCopy(allFinalCubes , name, poolLocation=outputDir)
+saveSlicedCopy(allFinalCubes , name, poolLocation=output_dir)
 
 if verbose:
 	slicedSummary(allFinalCubes)
@@ -291,4 +292,4 @@ if verbose:
 trackfile = open(trackfilename,'a')
 trackfile.write("END			Total Duration: "+ str("%7.1f\n" % (time.time() - starttime)) +"\n")
 trackfile.close()
-
+"""

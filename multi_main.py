@@ -110,7 +110,7 @@ saveIndividualObsids = 1
 # Chose the obsids TEMP - Change them with ESAC data
 obsids = {}
 obsids[1342229701] = "SEDA" 
-obsids[1342229702] = "SEDB"
+# obsids[1342229702] = "SEDB"
 
 # The few pipeline parameters you can set here:
 # Rebinning Parameters
@@ -208,8 +208,6 @@ for i in range(len(obsids.keys())):
     # theseFinalCubes = getSlicedCopy(slicedFinalCubes)
     # finalCubeList.append(theseFinalCubes)
 
-
-
 """
 # Merge all finalCubes into one single slicedProduct
 # allFinalCubes = concatenateSliced(finalCubeList)
@@ -305,8 +303,8 @@ if verbose:
 	    openVariable("fullSpecCorr3x3", "Spectrum Explorer")
     except:
         print "Info: openVariable could not open Spectrum Explorer"
-
-trackfile = open(trackfilename,'a')
-trackfile.write("END			Total Duration: "+ str("%7.1f\n" % (time.time() - starttime)) +"\n")
-trackfile.close()
 """
+trackfile = open(trackfilename,'a')
+trackfile.write("END Total Duration: "+ str("%7.1f\n" % (time.time() - start_time)) +"\n")
+trackfile.close()
+

@@ -145,20 +145,24 @@ trackfile.close()
 # Structure holding the final cubes for every pair [obsid,camera]
 finalCubeList = []
 
+observations_dict = {}
+
 # Run pipeline over obs
-for obsid in obsids.keys():
+for i in range(len(obsids.keys())):
     camera = 'red'
     # Next, get the data
-    obs = getObservation(obsid, verbose = True, useHsa = 1,\
-                         poolLocation = None, poolName = None)
+    observations_dict["obs_{0}".format(obsids.keys()[i])]= getObservation(obsids.keys()[i], verbose = True,\
+                                                                          useHsa = 1, poolLocation = None,\
+                                                                          poolName = None)
     if save_obs:
-        saveObservation(obs, poolLocation = pool_dir,\
+        saveObservation(observations_dict["obs_{0}".format(obsids.keys()[i])], poolLocation = pool_dir,\
                         poolName = 'red_leak_pool')
 
     # print outs to keep you up to date with progress
     actual_time = time.time()
+    
     trackfile = open(trackfilename,'a')
-    trackfile.write("Processing observation " + str(obsid) +\
+    trackfile.write("Processing observation " + str(obsids.keys()[i]) +\
                     " with camera " + camera + " at " + str(actual_time) +\
                     "\n")
     trackfile.close()
@@ -166,7 +170,7 @@ for obsid in obsids.keys():
     execfile(script)
         
     # Save the results
-    nameBasis = "OBSID_" + str(obsid) + "_" + obsids[obsid] + "_" +\
+    nameBasis = "OBSID_" + str(obsids.keys()[i]) + "_" + obsids[obsids.keys()[i]] + "_" +\
                 camera + "_" + buildNumber.replace('.','_') + "_" + strovup
     if saveIndividualObsids:
         try:
@@ -184,20 +188,27 @@ for obsid in obsids.keys():
             saveSlicedCopy(slicedCubes, nameBasis + "_RebinnedCubes",\
                            poolLocation = working_dir)
 
-        """
-        saveSlicedCopy(slicedFinalCubes, nameBasis + "_FinalCubes",\
-                       poolLocation = working_dir)
-        """
+
+        #saveSlicedCopy(slicedFinalCubes, nameBasis + "_FinalCubes",\
+        #               poolLocation = working_dir)
+
+
+    duration = time.time() - actual_time
+    duration_m = int(duration/60)
+    duration_s = duration - duration_m*60
 
     trackfile = open(trackfilename, 'a')
-    trackfile.write("End " + str(obsid) + " " + camera + " Duration: " +\
-                    str("%7.1f\n" % (time.time() - actual_time)) + "\n")
+    trackfile.write('End ' + str(obsids.keys()[i]) + " " + camera +\
+                    ' Duration: ' + str(duration_m) + ' m ' +\
+                    str(duration_s) + ' s ' + '\n')
     trackfile.close()
 
     # Gather the final spectra in one single structure, later easier to 
     # handle, save & plot
     # theseFinalCubes = getSlicedCopy(slicedFinalCubes)
     # finalCubeList.append(theseFinalCubes)
+
+
 
 """
 # Merge all finalCubes into one single slicedProduct

@@ -38,30 +38,30 @@ from herschel.pacs.spg.pipeline.spg_spec_tools import *
 # quality control.) 
 # If the anomaly is present, then a Meta Data entry "qflag_DMANOG4L_p" will be 
 # added to obs, and a flag is added to the "quality" of obs.
-obs = checkForAnomaly70(obs)
+observations_dict["obs_{0}".format(obsids.keys()[i])] = checkForAnomaly70(observations_dict["obs_{0}".format(obsids.keys()[i])])
 
 # filter meta keywords and update descriptions
-modifyMetaData(obs)
+modifyMetaData(observations_dict["obs_{0}".format(obsids.keys()[i])])
 
 # add extra meta data 
-pacsEnhanceMetaData(obs)
+pacsEnhanceMetaData(observations_dict["obs_{0}".format(obsids.keys()[i])])
    
 # copy the metadata from the ObservationContext to the level0 product
-pacsPropagateMetaKeywords(obs,'0', obs.level0)
+pacsPropagateMetaKeywords(observations_dict["obs_{0}".format(obsids.keys()[i])],'0', observations_dict["obs_{0}".format(obsids.keys()[i])].level0)
 
 # Extract the level0 from the ObservationContext 
-level0 = PacsContext(obs.level0)
+level0 = PacsContext(observations_dict["obs_{0}".format(obsids.keys()[i])].level0)
 level0 = level0.updateContextType()
-obs.level0 = level0
+observations_dict["obs_{0}".format(obsids.keys()[i])].level0 = level0
 
 # Extract the pointing product
-pp = obs.auxiliary.pointing
+pp = observations_dict["obs_{0}".format(obsids.keys()[i])].auxiliary.pointing
 
 # Extract the orbit ephemeris information
-orbitEphem = obs.auxiliary.orbitEphemeris
+orbitEphem = observations_dict["obs_{0}".format(obsids.keys()[i])].auxiliary.orbitEphemeris
 
 # Extract Time Correlation which is used to convert in addUtc
-timeCorr = obs.auxiliary.timeCorrelation
+timeCorr = observations_dict["obs_{0}".format(obsids.keys()[i])].auxiliary.timeCorrelation
 
 #-------------------------------------------------------------------------------
 # SETUP 2:
@@ -70,19 +70,19 @@ timeCorr = obs.auxiliary.timeCorrelation
 # by the SPG pipeline 
 # If not, then take it from your current HIPE build, and then put it into the 
 # ObservationContext so that it is stored there for future reference
-calTree = getCalTree(obs = obs)
-obs.calibration = calTree
+calTree = getCalTree(obs = observations_dict["obs_{0}".format(obsids.keys()[i])])
+observations_dict["obs_{0}".format(obsids.keys()[i])].calibration = calTree
 
 rsrfR1_v5 = getCalProduct("Spectrometer", "RsrfR1", 5)
 print rsrfR1_v5.calFileVersion
 
 # Extract the Horizons product
 try :
-    hp = obs.auxiliary.refs["HorizonsProduct"].product
+    hp = observations_dict["obs_{0}".format(obsids.keys()[i])].auxiliary.refs["HorizonsProduct"].product
 except :
     print "WARNING : No Horizons found !"
     hp = None
-#
+
 # For your camera, extract the Frames (scientific data), the rawramps (raw data 
 # for one pixel), and the DMC header (the mechanisms' status information, 
 # sampled at a high frequency) 
@@ -117,8 +117,8 @@ slicedFrames = specAddInstantPointing(slicedFrames, pp, calTree = calTree,\
                                       orbitEphem = orbitEphem,\
                                       horizonsProduct = hp)    
 #copy the saa meta keyword to the ObservationContext meta HCSS-SCR 19230
-obs.meta["solarAspectAngleMean"] = slicedFrames.meta["solarAspectAngleMean"].copy()
-obs.meta["solarAspectAngleRms"] = slicedFrames.meta["solarAspectAngleRms"].copy()
+observations_dict["obs_{0}".format(obsids.keys()[i])].meta["solarAspectAngleMean"] = slicedFrames.meta["solarAspectAngleMean"].copy()
+observations_dict["obs_{0}".format(obsids.keys()[i])].meta["solarAspectAngleRms"] = slicedFrames.meta["solarAspectAngleRms"].copy()
 
 # This task extends the Status of Frames with the parameters GRATSCAN, CHOPPER,
 # CHOPPOS used cal file: ChopperThrowDescription
@@ -173,7 +173,7 @@ slicedFrames = flagGratMoveFrames(slicedFrames, dmcHead = slicedDmcHead,\
                                   calTree = calTree)
 
 # Update of the observation context
-obs = updatePacsObservation(obs, 0.5, [slicedFrames, slicedDmcHead])
+observations_dict["obs_{0}".format(obsids.keys()[i])] = updatePacsObservation(observations_dict["obs_{0}".format(obsids.keys()[i])], 0.5, [slicedFrames, slicedDmcHead])
 
 # remove some variables (clean-up of memory)
 # del pp, orbitEphem, slicedDmcHead, slicedFrames, slicedRawRamp 
@@ -229,7 +229,7 @@ HISTORY
 """
 
 # Extract the (previously-reduced and saved) level 0_5 out of the ObservationContext
-level0_5 = PacsContext(obs.level0_5)
+level0_5 = PacsContext(observations_dict["obs_{0}".format(obsids.keys()[i])].level0_5)
 
 # extract the frames for your camera
 slicedFrames = level0_5.fitted.getCamera(camera).product
@@ -267,7 +267,7 @@ slicedCubes = specFrames2PacsCube(slicedFrames)
 slicedCubes = centerRaDecMetaData(slicedCubes)
 
 # Update of the observation context
-obs = updatePacsObservation(obs, 1.0, [slicedFrames, slicedCubes])
+observations_dict["obs_{0}".format(obsids.keys()[i])] = updatePacsObservation(observations_dict["obs_{0}".format(obsids.keys()[i])], 1.0, [slicedFrames, slicedCubes])
 
 # Remove some variables (memory clean-up)
 # del slicedFrames, slicedCubes, level0_5
@@ -330,7 +330,7 @@ HISTORY
 sink.setUsed(True)
 
 # Extract the (previously-reduced and saved) level 1 out of the ObservationContext
-level1 = PacsContext(obs.level1)
+level1 = PacsContext(observations_dict["obs_{0}".format(obsids.keys()[i])].level1)
 
 # SETUP 2:
 
@@ -340,7 +340,7 @@ slicedFrames = level1.fitted.getCamera(camera).product
 # Computes the telescope background flux and scales the normalized signal with 
 # the telescope background flux using asymmetric chopping
 slicedFramesCal, background = specRespCalToTelescope(slicedFrames,\
-                                                     obs.auxiliary.hk,\
+                                                     observations_dict["obs_{0}".format(obsids.keys()[i])].auxiliary.hk,\
                                                      calTree = calTree,\
                                                      reduceNoise = 1, copy = 1)
 # convert the Frames to a PacsCube
@@ -351,26 +351,27 @@ slicedCubesCal = centerRaDecMetaData(slicedCubesCal)
 # ******************************************************************************
 #         Processing
 # ******************************************************************************   
-#
-# copyCube=True makes slicedCubes a fully independent product
+
+# copyCube = True makes slicedCubes a fully independent product
 copyCube = True
 
-#
 # Flatfielding for line spectroscopy and short range scans (up to 5 micron) only
-# (See the ipipe scripts and the PDRG for an explanation of the flatfielding tasks.)
-#
-# For SED and large range spectroscopy, note that flatfielding is done in the ipipe scripts.
-# (For line spectroscopy, you should anyway redo the flatfielding so you can check the results)
-#
+# (See the ipipe scripts and the PDRG for an explanation of the 
+# flatfielding tasks.)
+
+# For SED and large range spectroscopy, note that flatfielding is done in the 
+# ipipe scripts. (For line spectroscopy, you should anyway redo the flatfielding
+# so you can check the results)
+
 lineSpec = isLineSpec(slicedCubes)
-shortRange = isShortRange(obs)
+shortRange = isShortRange(observations_dict["obs_{0}".format(obsids.keys()[i])])
 maskNotFF = False
 if lineSpec or shortRange:
-    ffUpsample = getUpsample(obs)
+    ffUpsample = getUpsample(observations_dict["obs_{0}".format(obsids.keys()[i])])
         
     # 1. Flag outliers and rebin
-    waveGrid=wavelengthGrid(slicedCubes, oversample = 2, upsample = ffUpsample,\
-                            calTree = calTree)
+    waveGrid = wavelengthGrid(slicedCubes, oversample = 2,\
+                              upsample = ffUpsample, calTree = calTree)
     slicedCubes = activateMasks(slicedCubes,\
                                 String1d(["GLITCH", "UNCLEANCHOP",\
                                           "NOISYPIXELS", "RAWSATURATION",\
@@ -400,7 +401,7 @@ if lineSpec or shortRange:
                                   refContext = slicedRebinnedCubes)
 
     width = 2.5
-    if isRangeSpec(obs):
+    if isRangeSpec(observations_dict["obs_{0}".format(obsids.keys()[i])]):
         width = 1.5
         
     # 2. mask the line !!!!!!!!!!!!!!!!!!!
@@ -421,16 +422,24 @@ if lineSpec or shortRange:
                                        scaling = 1, maxrange = [55.,190.],\
                                        slopeInContinuum = 1, maxScaling = 2.,\
                                        maskType = "OUTLIERS_FF", offset = 0)
-    # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse to overwrite OUTLIERS) & deactivate mask INLINE
+    # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse 
+    # to overwrite OUTLIERS) & deactivate mask INLINE
     slicedCubes.renameMask("OUTLIERS", "OUTLIERS_B4FF")
-    slicedCubes = deactivateMasks(slicedCubes, String1d(["INLINE", "OUTLIERS_B4FF"]))
+    slicedCubes = deactivateMasks(slicedCubes,\
+                                  String1d(["INLINE", "OUTLIERS_B4FF"]))
     slicedCubesCal.renameMask("OUTLIERS", "OUTLIERS_B4FF")
-    slicedCubesCal = deactivateMasks(slicedCubesCal, String1d(["INLINE", "OUTLIERS_B4FF"]))
+    slicedCubesCal = deactivateMasks(slicedCubesCal,\
+                                     String1d(["INLINE", "OUTLIERS_B4FF"]))
     # del ffUpsample, width
 
-elif isRangeSpec(obs):
-    slicedFrames = specFlatFieldRange(slicedFrames, useSplinesModel = True, excludeLeaks = True, calTree = calTree, copy = copyCube)
-    slicedFramesCal = specFlatFieldRange(slicedFramesCal, useSplinesModel = True, excludeLeaks = True, calTree = calTree, copy = copyCube)
+elif isRangeSpec(observations_dict["obs_{0}".format(obsids.keys()[i])]):
+    slicedFrames = specFlatFieldRange(slicedFrames, useSplinesModel = True,\
+                                      excludeLeaks = True, calTree = calTree,\
+                                      copy = copyCube)
+    slicedFramesCal = specFlatFieldRange(slicedFramesCal,\
+                                         useSplinesModel = True,\
+                                         excludeLeaks = True,\
+                                         calTree = calTree, copy = copyCube)
     copyCube = False
     maskNotFF = True
     slicedCubes = specFrames2PacsCube(slicedFrames)
@@ -441,7 +450,7 @@ elif isRangeSpec(obs):
     
 # Building the wavelength grids for each slice
 # Used cal file: wavelengthGrid
-upsample = getUpsample(obs)
+upsample = getUpsample(observations_dict["obs_{0}".format(obsids.keys()[i])])
 waveGrid = wavelengthGrid(slicedCubes, oversample = 2, upsample = upsample,\
                           calTree = calTree)
 
@@ -457,7 +466,8 @@ slicedCubesCal = activateMasks(slicedCubesCal,\
                                          "BADPIXELS"]), exclusive = True,\
                                                         copy = copyCube)
 
-# Flag the remaining outliers (sigma-clipping in wavelength domain), with default parameters here
+# Flag the remaining outliers (sigma-clipping in wavelength domain), 
+# with default parameters here
 slicedCubes = specFlagOutliers(slicedCubes, waveGrid)
 slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid)
 
@@ -477,16 +487,22 @@ print "El tamanio de slicedRebinnedCubes es: ", slicedRebinnedCubes.refs.size()
 if slicedRebinnedCubes.refs.size() > 0:
 
     # Select only the slices in the PACS cube which are also in the rebinned cube
-    slicedCubes = selectSlices(slicedCubes,refContext=slicedRebinnedCubes)
-    slicedCubesCal = selectSlices(slicedCubesCal,refContext=slicedRebinnedCubes)
+    slicedCubes = selectSlices(slicedCubes,\
+                               refContext = slicedRebinnedCubes)
+    slicedCubesCal = selectSlices(slicedCubesCal,\
+                                  refContext = slicedRebinnedCubes)
 
     # Combine the nod-A & nod-B rebinned cubes.
     # All cubes at the same raster position are averaged.
-    # This is the final science-grade product for spatially undersampled rasters and single pointings
+    # This is the final science-grade product for spatially undersampled 
+    # rasters and single pointings
     slicedRebinnedCubes = specAddNodCubes(slicedRebinnedCubes)  
 
-    # Computes the telescope background flux and scales the normalized signal with the telescope background flux
-    slicedRebinnedCubes, background = specRespCalToTelescope(slicedRebinnedCubes, obs.auxiliary.hk, calTree = calTree)
+    # Computes the telescope background flux and scales the normalized signal 
+    # with the telescope background flux
+    slicedRebinnedCubes, background = specRespCalToTelescope(slicedRebinnedCubes,\
+                                                             observations_dict["obs_{0}".format(obsids.keys()[i])].auxiliary.hk,\
+                                                             calTree = calTree)
     
     # compute ra/dec meta keywords
     slicedRebinnedCubes = centerRaDecMetaData(slicedRebinnedCubes)
@@ -495,10 +511,13 @@ if slicedRebinnedCubes.refs.size() > 0:
     slicedTable = pacsSpecCubeToTable(slicedRebinnedCubes)
       
     # Compute equidistant wavelength grid for equidistant regridding
-    equidistantWaveGrid = wavelengthGrid(slicedCubes, oversample=2, upsample = upsample, calTree = calTree, regularGrid = True, fracMinBinSize = 0.35)
+    equidistantWaveGrid = wavelengthGrid(slicedCubes, oversample = 2,\
+                                         upsample = upsample, calTree = calTree,\
+                                         regularGrid = True,\
+                                         fracMinBinSize = 0.35)
     
     # determine mapping algorithm and parameters
-    driz, pixelSize, interpolatePixelSize, oversampleSpace, upsampleSpace, pixFrac, source, mapType = determineMappingAlgorithm(slicedRebinnedCubes,camera)
+    driz, pixelSize, interpolatePixelSize, oversampleSpace, upsampleSpace, pixFrac, source, mapType = determineMappingAlgorithm(slicedRebinnedCubes, camera)
     
     # Mosaic, per wavelength range, all raster pointings into a single cube
     slicedDrizzledCubes = None
@@ -506,28 +525,50 @@ if slicedRebinnedCubes.refs.size() > 0:
     slicedInterpolatedCubes = None
     slicedInterpolatedEquidistantCubes = None
     slicedProjectedEquidistantCubes = None
+
     if driz:
         oversampleWave = 2
         upsampleWave = upsample
-        waveGridForDrizzle = wavelengthGrid(slicedCubes, oversample=oversampleWave, upsample=upsampleWave, calTree = calTree)
-        equidistantWaveGridForDrizzle = wavelengthGrid(slicedCubes, oversample=oversampleWave, upsample = upsampleWave, calTree = calTree, regularGrid = True, fracMinBinSize = 0.35)
-        spaceGrid = spatialGrid(slicedCubes, wavelengthGrid=waveGridForDrizzle, oversample=oversampleSpace, upsample=upsampleSpace, pixfrac=pixFrac, calTree=calTree)
-        slicedDrizzledCubes = drizzle(slicedCubesCal, wavelengthGrid=waveGridForDrizzle, spatialGrid=spaceGrid)[0]
+        waveGridForDrizzle = wavelengthGrid(slicedCubes,\
+                                            oversample = oversampleWave,\
+                                            upsample = upsampleWave,\
+                                            calTree = calTree)
+        equidistantWaveGridForDrizzle = wavelengthGrid(slicedCubes,\
+                                                       oversample = oversampleWave,\
+                                                       upsample = upsampleWave,\
+                                                       calTree = calTree,\
+                                                       regularGrid = True,\
+                                                       fracMinBinSize = 0.35)
+        spaceGrid = spatialGrid(slicedCubes,\
+                                wavelengthGrid = waveGridForDrizzle,\
+                                oversample = oversampleSpace,\
+                                upsample = upsampleSpace, pixfrac = pixFrac,\
+                                calTree = calTree)
+        slicedDrizzledCubes = drizzle(slicedCubesCal,\
+                                      wavelengthGrid = waveGridForDrizzle,\
+                                      spatialGrid = spaceGrid)[0]
         slicedDrizzledCubes = centerRaDecMetaData(slicedDrizzledCubes)
         sink.saveWhenMemoryShort(slicedDrizzledCubes)
-        slicedDrizzledEquidistantCubes = specRegridWavelength(slicedDrizzledCubes, equidistantWaveGridForDrizzle)
+        slicedDrizzledEquidistantCubes = specRegridWavelength(slicedDrizzledCubes,\
+                                                              equidistantWaveGridForDrizzle)
         sink.saveWhenMemoryShort(slicedDrizzledEquidistantCubes)
-        slicedProjectedCubes = specProject(slicedRebinnedCubes, cubeWithOutputGrid=slicedDrizzledCubes)
-        del spaceGrid, waveGridForDrizzle, equidistantWaveGridForDrizzle, oversampleWave, upsampleWave
+        slicedProjectedCubes = specProject(slicedRebinnedCubes,\
+                                           cubeWithOutputGrid = slicedDrizzledCubes)
+        # del spaceGrid, waveGridForDrizzle, equidistantWaveGridForDrizzle, oversampleWave, upsampleWave
     else:
-        slicedProjectedCubes = specProject(slicedRebinnedCubes,outputPixelsize=pixelSize)
+        slicedProjectedCubes = specProject(slicedRebinnedCubes,\
+                                           outputPixelsize = pixelSize)
         if mapType != "oversampled":
-            slicedInterpolatedCubes = specInterpolate(slicedRebinnedCubes,outputPixelsize=interpolatePixelSize)
+            slicedInterpolatedCubes = specInterpolate(slicedRebinnedCubes,\
+                                                      outputPixelsize = interpolatePixelSize)
             slicedInterpolatedCubes = centerRaDecMetaData(slicedInterpolatedCubes)
+        
         if (mapType=="nyquist" or mapType=="oversampled"):
-            slicedProjectedEquidistantCubes = specRegridWavelength(slicedProjectedCubes, equidistantWaveGrid)
+            slicedProjectedEquidistantCubes = specRegridWavelength(slicedProjectedCubes,\
+                                                                   equidistantWaveGrid)
         else:
-            slicedInterpolatedEquidistantCubes = specRegridWavelength(slicedInterpolatedCubes, equidistantWaveGrid)
+            slicedInterpolatedEquidistantCubes = specRegridWavelength(slicedInterpolatedCubes,\
+                                                                      equidistantWaveGrid)
     
     slicedProjectedCubes = centerRaDecMetaData(slicedProjectedCubes)
     sink.saveWhenMemoryShort(slicedProjectedCubes)
@@ -535,22 +576,34 @@ if slicedRebinnedCubes.refs.size() > 0:
     # do a pointsource extraction for the pointed observations only
     spectra1d = None
     if source=='point':
-        if isRangeSpec(obs):
-            c1, c9, c129 = extractCentralSpectrum(slicedRebinnedCubes, smoothing='filter', width=50, preFilterWidth=15,  calTree=calTree)
+        if isRangeSpec(observations_dict["obs_{0}".format(obsids.keys()[i])]):
+            c1, c9, c129 = extractCentralSpectrum(slicedRebinnedCubes,\
+                                                  smoothing = 'filter',\
+                                                  width = 50,\
+                                                  preFilterWidth = 15,\
+                                                  calTree = calTree)
         else:
-            c1, c9, c129 = extractCentralSpectrum(slicedRebinnedCubes, smoothing='median', calTree=calTree)
+            c1, c9, c129 = extractCentralSpectrum(slicedRebinnedCubes,\
+                                                  smoothing = 'median',\
+                                                  calTree = calTree)
         spectra1d = fillPacsCentralSpectra(slicedRebinnedCubes, c1, c129, c9)
         del c1, c9, c129
         
     # update the level 2 of the ObservationContext 
-    obs = updatePacsObservation(obs, 2.0, [slicedCubesCal, slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 
-    slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
-    slicedProjectedEquidistantCubes])
+    observations_dict["obs_{0}".format(obsids.keys()[i])] = updatePacsObservation(observations_dict["obs_{0}".format(obsids.keys()[i])],\
+                                                                                  2.0,\
+                                                                                  [slicedCubesCal, slicedRebinnedCubes, slicedProjectedCubes,\
+                                                                                   slicedDrizzledCubes, slicedTable, slicedInterpolatedCubes,\
+                                                                                   spectra1d, slicedDrizzledEquidistantCubes,\
+                                                                                   slicedInterpolatedEquidistantCubes,\
+                                                                                   slicedProjectedEquidistantCubes])
     
     # remove variables to cleanup memory
-    del slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize, oversampleSpace, upsampleSpace, pixFrac, source, mapType, \
-    slicedDrizzledCubes, slicedDrizzledEquidistantCubes, slicedInterpolatedCubes, slicedInterpolatedEquidistantCubes, \
-    slicedProjectedCubes, slicedProjectedEquidistantCubes, spectra1d
+    del slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize
+    del oversampleSpace, upsampleSpace, pixFrac, source, mapType
+    del slicedDrizzledCubes, slicedDrizzledEquidistantCubes
+    del slicedInterpolatedCubes, slicedInterpolatedEquidistantCubes
+    del slicedProjectedCubes, slicedProjectedEquidistantCubes, spectra1d
 else:
     LOGGER.warning("No slices left anymore after filtering red-leak and out-of-band slices.")
 

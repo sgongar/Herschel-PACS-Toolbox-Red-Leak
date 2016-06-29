@@ -23,6 +23,7 @@ from herschel.pacs.signal.context import *
 from herschel.pacs.spg.common import *
 from herschel.pacs.spg.common import SlicingRule
 from herschel.pacs.spg.spec import *
+from herschel.pacs.spg.spec import SpecFlatFieldLineTask
 from herschel.pacs.cal import *
 from herschel.pacs.cal import GetPacsCalDataTask
 from herschel.ia.numeric import *
@@ -328,8 +329,6 @@ HISTORY
   2013-04-04 KME improve comments 
 """
 
-
-#
 #*******************************************************************************
 # Preparation
 #*******************************************************************************
@@ -427,14 +426,17 @@ slicedCubesCal = maskLines(slicedCubesCal, slicedRebinnedCubes,\
                            widthMask = width, threshold = 10.0,\
                            maskType = "INLINE")
 # 3. do the flatfielding
+print "antes de specFlatFieldLine"
 slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree,\
                                 scaling = 1, maxrange = [55.,190.],\
                                 slopeInContinuum = 1, maxScaling = 2.,\
                                 maskType = "OUTLIERS_FF", offset = 0)
+print "en mitad de specFlatFieldLine"
 slicedCubesCal = specFlatFieldLine(slicedCubesCal, calTree = calTree,\
                                    scaling = 1, maxrange = [55.,190.],\
                                    slopeInContinuum = 1, maxScaling = 2.,\
                                    maskType = "OUTLIERS_FF", offset = 0)
+print "despues de specFlatFieldLine"
 # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse 
 # to overwrite OUTLIERS) & deactivate mask INLINE
 slicedCubes.renameMask("OUTLIERS", "OUTLIERS_B4FF")
@@ -465,9 +467,14 @@ elif isRangeSpec(observations_dict["obs_{0}".format(obsids.keys()[i])]):
     
 # Building the wavelength grids for each slice
 # Used cal file: wavelengthGrid
+
+print "antes de wavelengthgrid"
+
 upsample = getUpsample(observations_dict["obs_{0}".format(obsids.keys()[i])])
 waveGrid = wavelengthGrid(slicedCubes, oversample = 2, upsample = upsample,\
                           calTree = calTree)
+
+print "despues de wavelengthgrid"
 
 # Active masks 
 slicedCubes = activateMasks(slicedCubes,\
@@ -488,7 +495,7 @@ slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid)
 
 # Rebin all cubes on consistent wavelength grids
 masksForRebinning = String1d(["OUTOFBAND", "GLITCH", "UNCLEANCHOP",\
-                              "SATURATION", "GRATMOVE", "BADFITPIX",\
+                             "SATURATION", "GRATMOVE", "BADFITPIX",\
                               "OUTLIERS", "BADPIXELS"])
 
 masksForRebinning.append("NOTFFED")
@@ -541,6 +548,7 @@ if slicedRebinnedCubes.refs.size() > 0:
     slicedInterpolatedEquidistantCubes = None
     slicedProjectedEquidistantCubes = None
 
+    """
     if driz:
         oversampleWave = 2
         upsampleWave = upsample
@@ -631,3 +639,4 @@ else:
 restoreOldSinkState()
 
 del calTree
+"""

@@ -97,7 +97,8 @@ elif isRangeSpec(obs):
     slicedFrames = specFlatFieldRange(slicedFrames, useSplinesModel=True,
                                       excludeLeaks=False,
                                       selectedRange=[55.0, 220.0], 
-                                      calTree=calTree, copy = copyCube)
+                                      calTree=calTree, copy = copyCube,
+                                      wlIntervalKnots={1:2.0, 2:3.0, 3:2.0} )
     copyCube = False
     maskNotFF = True
     slicedCubes = specFrames2PacsCube(slicedFrames)

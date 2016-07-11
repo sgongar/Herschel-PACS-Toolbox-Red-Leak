@@ -8,9 +8,10 @@ print "Processing second case"
 lineSpec = isLineSpec(slicedCubes)
 shortRange = isShortRange(obs)
 
-slicedFrames = specFlatFieldRange(slicedFrames, useSplinesModel = True, 
-                                  excludeLeaks = False, calTree = calTree,
-                                  copy = copyCube, selectedRange=[198.0, 203.0])
+slicedFrames = specFlatFieldRange(slicedFrames, useSplinesModel=True, 
+                                  excludeLeaks=False, calTree=calTree,
+                                  copy=copyCube, selectedRange=[198.0, 203.0],
+                                  wlIntervalKnots={1:2.0, 2:3.0, 3:2.0})
 copyCube = False
 maskNotFF = True
 slicedCubes = specFrames2PacsCube(slicedFrames)

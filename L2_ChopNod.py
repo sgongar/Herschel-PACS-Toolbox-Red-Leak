@@ -79,9 +79,10 @@ maskNotFF = False
 
 # Four cases
 # - Withouth flatfielding
-# - Using specFlatfieldRange all the range with excludeLeak = False
 # - Using specFlatfieldRange maxRange=[198.0, 203.0] with excludeLeak = False
 # - Using specFlatfieldLine maxRange=[198.0, 203]
+# - Using specFlatfieldLine maxRange=[199.0, 201]
+# - Using specFlatfieldRange all the range with excludeLeak = False
 
 # First case
 first_case_start = time.time()
@@ -138,26 +139,6 @@ trackfile.write('End third case ' + str(obsids.keys()[i]) + " " + camera +
                 ' s ' + '\n')
 trackfile.close()
 
-"""
-# Third case (bis)
-third_case_bis_start = time.time()
-
-slicedCubes = slicedCubes_copy.copy()
-slicedFrames = slicedFrames_copy.copy()
-execfile(str(third_case_bis))
-name = str(obsid) + "_case3_bis"
-saveObservation(obs, poolLocation = pool_dir, poolName = name)
-
-test_time = time.time() - third_case_bis_start
-test_time_m = int(test_time/60)
-test_time_s = int(test_time - test_time_m*60)
- 
-trackfile = open(trackfilename, 'a')
-trackfile.write('End third case ' + str(obsids.keys()[i]) + " " + camera +
-                ' Duration: ' + str(test_time_m) + ' m ' + str(test_time_s) + 
-                ' s ' + '\n')
-trackfile.close()
-"""
 # Fourth case
 fourth_case_start = time.time()
 

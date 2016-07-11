@@ -32,7 +32,7 @@ width=2.5
 if isRangeSpec(obs):
     width=1.5
         
-# 2. mask the line
+# 2. mask the liner
 slicedCubes = maskLines(slicedCubes, slicedRebinnedCubes, calTree=calTree,
                         widthDetect=width, widthMask=width,
                         threshold=10.0, maskType="INLINE")

@@ -103,7 +103,6 @@ start_time = time.time()
 start_time_hr = datetime.datetime.fromtimestamp(start_time)
 start_time_hr = str(start_time_hr)
 
-output_dir = '/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/'
 working_dir = '/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/pacsSpecOut/'
 pool_dir = '/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/pools/'
 
@@ -180,7 +179,7 @@ sey = str(obsid)+"_case3"
 obs_case3 = getObservation(obsid=obsid, poolLocation=str(pool_dir),
                            poolName=sey)
 sey = str(obsid)+"_case4"
-obs_case3 = getObservation(obsid=obsid, poolLocation=str(pool_dir),
+obs_case4 = getObservation(obsid=obsid, poolLocation=str(pool_dir),
                            poolName=sey)
 sey = str(obsid)+"_casen"
 obs_casen = getObservation(obsid=obsid, poolLocation=str(pool_dir),
@@ -211,16 +210,110 @@ flx_t3 = cube_t3.getFlux()[:, spaxX, spaxY]
 flx_t4 = cube_t3.getFlux()[:, spaxX, spaxY]
 flx_n = cube_n.getFlux()[:, spaxX, spaxY]
 
-p = PlotXY(titleText = "Comparation tests")
-p.addLayer(LayerXY(wve_t1, flx_t1, line = 1,
-                   name="no flatfielding selected"))
-p.addLayer(LayerXY(wve_t2, flx_t2, line = 1,
-                   name="flatfielding range selecting range"))
-p.addLayer(LayerXY(wve_t3, flx_t3, line = 1,
-                   name="flatfielding line selecting range [198, 203]"))
-p.addLayer(LayerXY(wve_t4, flx_t4, line = 1,
-                   name="flatfielding line selecting range [199, 201]"))
-p.addLayer(LayerXY(wve_n, flx_n, line = 1, 
-                   name="flatfielding range whole range"))
-p.legend.visible = 1
-p.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/comparation.png")
+# Main plot of all test cases
+main_plot = PlotXY(titleText = "All tests cases")
+main_plot.addLayer(LayerXY(wve_t1, flx_t1, line = 1,
+                           name="no flatfielding selected"))
+main_plot.addLayer(LayerXY(wve_t2, flx_t2, line = 1,
+                           name="flatfielding range selecting range [198, 203]", xrange=[196,205]))
+main_plot.addLayer(LayerXY(wve_t3, flx_t3, line = 1,
+                           name="flatfielding line selecting range [198, 203]", xrange=[196,205]))
+main_plot.addLayer(LayerXY(wve_t4, flx_t4, line = 1,
+                           name="flatfielding line selecting range [199, 201]", xrange=[196,205]))
+main_plot.addLayer(LayerXY(wve_n, flx_n, line = 1, 
+                           name="flatfielding range whole range [55, 203]", xrange=[196,205]))
+main_plot.legend.visible = 1
+main_plot.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/all_tests.png")
+
+# No flatfielding against flatfielding range selecting range [198, 203]
+test_plot_1 = PlotXY(titleText="NoFF vs. FFRangeSelecting [198, 203]",
+                     xrange=[196,205])
+test_plot_1.addLayer(LayerXY(wve_t1, flx_t1, line=1,
+                             name="no flatfielding selected",
+                             xrange=[196,205]))
+test_plot_1.addLayer(LayerXY(wve_t2, flx_t2, line=1,
+                             name="flatfielding range selecting range [198, 203]",
+                             xrange=[196,205]))
+test_plot_1.legend.visible=1
+test_plot_1.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/noFF_vs_FFRangeSelectingRange.png")
+
+# No flatfielding against flatfielding line selecting range [198, 203]
+test_plot_2 = PlotXY(titleText="NoFF vs. FFLineSelecting [198, 203]",
+                     xrange=[196,205])
+test_plot_2.addLayer(LayerXY(wve_t1, flx_t1, line=1,
+                             name="no flatfielding selected", xrange=[196,205]))
+test_plot_2.addLayer(LayerXY(wve_t3, flx_t3, line=1,
+                             name="flatfielding line selecting range [198, 203]", xrange=[196,205]))
+test_plot_2.legend.visible=1
+test_plot_2.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/noFF_vs_FFLineSelectingRangeA.png")
+
+# No flatfielding against flatfielding line selecting range [199, 201]
+test_plot_3 = PlotXY(titleText="NoFF vs. FFLineSelectingRange [199, 201]",
+                     xrange=[196,205])
+test_plot_3.addLayer(LayerXY(wve_t1, flx_t1, line=1,
+                             name="no flatfielding selected", xrange=[196,205]))
+test_plot_3.addLayer(LayerXY(wve_t4, flx_t4, line = 1,
+                           name="flatfielding line selecting range [199, 201]", xrange=[196,205]))
+test_plot_3.legend.visible = 1
+test_plot_3.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/noFF_vs_FFLineSelectingRangeB.png")
+
+# No flatfielding against flatfielding range whole range
+test_plot_4 = PlotXY(titleText="NoFF vs. FFRangeWholeRange [55. 203]",
+                     xrange=[196,205])
+test_plot_4.addLayer(LayerXY(wve_t1, flx_t1, line=1,
+                             name="no flatfielding selected", xrange=[196,205]))
+test_plot_4.addLayer(LayerXY(wve_n, flx_n, line=1, 
+                             name="flatfielding range whole range [55, 203]", xrange=[196,205]))
+test_plot_4.legend.visible = 1
+test_plot_4.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/noFF_vs_FFRangeWholeRange.png")
+
+# Flatfielding range selecting [198, 203] against flatfielding line selecting [198, 203]
+test_plot_5 = PlotXY(titleText="FFRangeSelecting [198, 203] vs. FFLineSelecting [198, 203]", xrange=[196,205])
+test_plot_5.addLayer(LayerXY(wve_t2, flx_t2, line = 1,
+                           name="flatfielding range selecting range [198, 203]", xrange=[196,205]))
+test_plot_5.addLayer(LayerXY(wve_t3, flx_t3, line = 1,
+                           name="flatfielding line selecting range [198, 203]", xrange=[196,205]))
+test_plot_5.legend.visible = 1
+test_plot_5.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/FFRangeSelecting_vs_FFLine_Selecting_Range.png")
+"""
+# Flatfielding range selecting [198, 203] against flatfielding line selecting range [199, 201]
+main_plot = PlotXY(titleText = "All tests cases")
+main_plot.addLayer(LayerXY(wve_t1, flx_t1, line = 1,
+                           name="no flatfielding selected"))
+main_plot.addLayer(LayerXY(wve_t2, flx_t2, line = 1,
+                           name="flatfielding range selecting range [198, 203]"))
+main_plot.addLayer(LayerXY(wve_t3, flx_t3, line = 1,
+                           name="flatfielding line selecting range [198, 203]"))
+main_plot.addLayer(LayerXY(wve_t4, flx_t4, line = 1,
+                           name="flatfielding line selecting range [199, 201]"))
+main_plot.addLayer(LayerXY(wve_n, flx_n, line = 1, 
+                           name="flatfielding range whole range [55, 203]"))
+main_plot.legend.visible = 1
+main_plot.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/all_tests.png")
+"""
+# As Katrina requested
+test_plot_10 = PlotXY(titleText = "All tests cases without no FF test - Whole Range", xrange=[196,205])
+test_plot_10.addLayer(LayerXY(wve_t2, flx_t2, line = 1,
+                              name="flatfielding range selecting range [198, 203]"))
+test_plot_10.addLayer(LayerXY(wve_t3, flx_t3, line = 1,
+                              name="flatfielding line selecting range [198, 203]"))
+test_plot_10.addLayer(LayerXY(wve_n, flx_n, line = 1, 
+                              name="flatfielding range whole range [55, 203]"))
+test_plot_10.legend.visible = 1
+test_plot_10.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/all_tests_without_noFF_whole.png")
+
+# As Katrina requested
+test_plot_11 = PlotXY(titleText = "All tests cases without no FF test - Test range", xrange=[196,205])
+test_plot_11.addLayer(LayerXY(wve_t2, flx_t2, line = 1,
+                              name="flatfielding range selecting range [198, 203]", xrange=[196,205]))
+test_plot_11.addLayer(LayerXY(wve_t3, flx_t3, line = 1,
+                              name="flatfielding line selecting range [198, 203]", xrange=[196,205]))
+test_plot_11.addLayer(LayerXY(wve_n, flx_n, line = 1, 
+                              name="flatfielding range whole range [55, 203]"))
+test_plot_11.legend.visible = 1
+test_plot_11.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/plots/all_tests_without_noFF_selected.png")
+
+# ============ Test!
+home_dir = os.getenv("HOME")
+working_dir_test = str(home_dir) + '/hcss/workspace/'
+print working_dir_test

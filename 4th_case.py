@@ -1,6 +1,6 @@
 # coding = utf-8
 # specflatfielding line
-# range = [198.0, 203.0]
+# range = [199.0, 201.0]
 
 print "Processing fourth case"
 copyCube = False

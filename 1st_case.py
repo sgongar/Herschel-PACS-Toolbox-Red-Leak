@@ -37,8 +37,6 @@ masksForRebinning.append("NOTFFED")
 slicedCubes = activateMasks(slicedCubes, masksForRebinning, exclusive=True)
 slicedRebinnedCubes = specWaveRebin(slicedCubes, waveGrid)
 
-print slicedRebinnedCubes.refs.size()
-
 # Only continue if there is at least one slice leftover after red-leak filtering
 if slicedRebinnedCubes.refs.size() > 0:
     # Select only the slices in the PACS cube which are also in the rebinned cube
@@ -49,11 +47,7 @@ if slicedRebinnedCubes.refs.size() > 0:
     # This is the final science-grade product for spatially undersampled 
     # rasters and single pointings
     slicedRebinnedCubes = specAddNodCubes(slicedRebinnedCubes)  
-
-    # Computes the telescope background flux and scales the normalized signal 
-    # with the telescope background flux
-    # slicedRebinnedCubes, background = specRespCalToTelescope(slicedRebinnedCubes, obs.auxiliary.hk, calTree = calTree)
-    
+   
     # compute ra/dec meta keywords
     slicedRebinnedCubes = centerRaDecMetaData(slicedRebinnedCubes)
     
@@ -139,14 +133,14 @@ if slicedRebinnedCubes.refs.size() > 0:
         spectra1d = fillPacsCentralSpectra(slicedRebinnedCubes, 
                                            ptSrcSpec=c1_1st,
                                            ptSrc3x3Spec=c9_1st)
-        # del c1_1st, c9_1st, c129_1st
+        del c1_1st, c9_1st, c129_1st
         
-    # update the level 2 of the ObservationContext 
-
+    # update the level 2 of the ObservationContext
     slicedRebinnedCubes.meta.set("sanitycheck",StringParameter("test1"))
-    obs = updatePacsObservation(obs, 2.0, [slicedCubes, slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 
-    slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
-    slicedProjectedEquidistantCubes])
+    obs = updatePacsObservation(obs, 2.0, [slicedCubes, slicedRebinnedCubes, 
+    slicedProjectedCubes, slicedDrizzledCubes, slicedTable,
+    slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes,
+    slicedInterpolatedEquidistantCubes, slicedProjectedEquidistantCubes])
     
     # remove variables to cleanup memory
     del slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize

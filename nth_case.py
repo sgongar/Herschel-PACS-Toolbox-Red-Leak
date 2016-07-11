@@ -19,27 +19,31 @@
 
 """
 VERSION     
-  $Id: L2_ChopNod.py,v 1.79 2016/06/17 14:06:15 jdejong Exp $      <do not touch. This field is changed by CVS>
+  $Id: L2_ChopNod.py,v 1.79 2016/06/17 14:06:15 jdejong Exp $  
+       <do not touch. This field is changed by CVS>
 
 PURPOSE
    PACS Spectrometer Pipeline of chop/nod AORs starting at level 1
 
-   This is the third level of the pipeline scripts of the SPG - the Standard Product Generation, 
-   a.k.a. the automatic pipeline that the HSC runs - and that which your HSA-gotten ObservationContext  
-   were reduced with, if they were reduced in this same track. 
+   This is the third level of the pipeline scripts of the SPG - the Standard 
+   Product Generation, a.k.a. the automatic pipeline that the HSC runs - and
+   that which your HSA-gotten ObservationContext  were reduced with, if they 
+   were reduced in this same track. 
 
-   The SPG scripts are similar to the interactive pipeline (ipipe) scripts that PACS provides in HIPE,  
-   but there are extra tasks that the ipipe scripts include, and so users should consider re-reducing
-   their data with the ipipe scripts.
-   This SPG script is provided so you can see what your HSA-gotten Observation Context levels 
-   were reduced with. We provide some comments explaining what the individual tasks do, but for detailed 
-   comments see the ipipe scripts, and for a detailed explanation of the pipeline, see the PACS Data 
+   The SPG scripts are similar to the interactive pipeline (ipipe) scripts that 
+   PACS provides in HIPE, but there are extra tasks that the ipipe scripts 
+   include, and so users should consider re-reducing their data with the ipipe 
+   scripts.
+   This SPG script is provided so you can see what your HSA-gotten Observation 
+   Context levels were reduced with. We provide some comments explaining what
+   the individual tasks do, but for detailed comments see the ipipe scripts, 
+   and for a detailed explanation of the pipeline, see the PACS Data 
    Reduction Guide.
 
-   The ipipe scripts can be found under the HIPE menu Pipelines->Spectrometer->. From there you go 
-   to the pipeline suited for your observation, such as Chopped line scan and short range scan->lineScan. 
+   The ipipe scripts can be found under the HIPE menu Pipelines->Spectrometer->. 
+   From there you go to the pipeline suited for your observation, such as 
+   Chopped line scan and short range scan->lineScan. 
 
-  
 AUTHOR
    Juergen Schreiber <schreiber@mpia.de>
 
@@ -52,10 +56,12 @@ WARNING
 INPUTS
    - obs : ObservationContext
        - Products needed to run the pipeline are extracted from it
-       - Must already be loaded in HIPE, and should contain the previously-reduced Levels 
+       - Must already be loaded in HIPE, and should contain the 
+         previously-reduced Levels 
    - camera : camera to reduce (only one done at a time)
        - "red" or "blue"
-   - calTree : Calibration Tree from the observation, or generated within your HIPE session 
+   - calTree : Calibration Tree from the observation, or generated within your 
+               HIPE session 
    
 HISTORY 
   2009-03-13 JS 1.0 initial version 
@@ -77,15 +83,16 @@ print "Processing normal case"
 # Always use the product sink for this script
 sink.setUsed(True)
 
-# Extract the (previously-reduced and saved) level 1 out of the ObservationContext
+# Extract the (previously-reduced and saved) level 1 out of the \
+# ObservationContext
 level1 = PacsContext(obs.level1)
-
 
 # SETUP 2:
 # Set up the calibration tree. 
-# First check whether calTree already exists, since it could have been filled by the SPG pipeline 
-# If not, then take it from your current HIPE build, and then put it into the ObservationContext 
-#  so that it is stored there for future reference
+# First check whether calTree already exists, since it could have been filled 
+# by the SPG pipeline. If not, then take it from your current HIPE build, and 
+# then put it into the ObservationContext so that it is stored there for 
+# future reference
 try:
     calTree
 except NameError:
@@ -96,29 +103,24 @@ except NameError:
 # extract level1 frames  and cubes for your camera   
 slicedCubes = level1.cube.getCamera(camera).product
 slicedFrames = level1.fitted.getCamera(camera).product
-# Computes the telescope background flux and scales the normalized signal with the telescope background flux using asymmetric chopping
-""""
-slicedFramesCal, background = specRespCalToTelescope(slicedFrames,
-                                                     obs.auxiliary.hk,
-                                                     calTree = calTree,
-                                                     reduceNoise=1, copy=1)
-"""
+
 # convert the Frames to a PacsCube
 # slicedCubesCal = specFrames2PacsCube(slicedFramesCal)     
 # compute ra/dec meta keywords
 # slicedCubesCal = centerRaDecMetaData(slicedCubesCal)
 #
-# ***********************************************************************************
+# ******************************************************************************
 #         Processing
-# ***********************************************************************************   
+# ******************************************************************************   
 #
 copyCube = True
 
+# Flatfielding for line spectroscopy and short range scans (up to 5 micron) 
+# only (See the ipipe scripts and the PDRG for an explanation of the 
+# flatfielding tasks.)
 #
-# Flatfielding for line spectroscopy and short range scans (up to 5 micron) only
-# (See the ipipe scripts and the PDRG for an explanation of the flatfielding tasks.)
-#
-# For SED and large range spectroscopy, note that flatfielding is done in the ipipe scripts.
+# For SED and large range spectroscopy, note that flatfielding is done in the 
+# ipipe scripts.
 #
 lineSpec = isLineSpec(slicedCubes)
 shortRange = isShortRange(obs)
@@ -133,8 +135,9 @@ if lineSpec or shortRange:
                                 String1d(["GLITCH", "UNCLEANCHOP",
                                           "NOISYPIXELS", "RAWSATURATION",
                                           "SATURATION","GRATMOVE",
-                                          "BADPIXELS", "INVALID"]), exclusive=True,
-                                                                    copy=copyCube)
+                                          "BADPIXELS", 
+                                          "INVALID"]), exclusive=True,
+                                                       copy=copyCube)
     copyCube = False
     slicedCubes = specFlagOutliers(slicedCubes, waveGrid, nSigma=5, nIter=1)
 
@@ -160,15 +163,17 @@ if lineSpec or shortRange:
                                     maxrange=[55.0, 203.0],
                                     slopeInContinuum=1, maxScaling=2.,
                                     maskType="OUTLIERS_FF", offset=0)
-    # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse to overwrite OUTLIERS) & deactivate mask INLINE
+    # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse 
+    #    to overwrite OUTLIERS) & deactivate mask INLINE
     slicedCubes.renameMask("OUTLIERS", "OUTLIERS_B4FF")
     slicedCubes = deactivateMasks(slicedCubes,
                                   String1d(["INLINE", "OUTLIERS_B4FF"]))
     del width
 elif isRangeSpec(obs):
     slicedFrames = specFlatFieldRange(slicedFrames, useSplinesModel=True,
-                                      excludeLeaks=False, selectedRange=[55.0, 220.0],calTree = calTree,
-                                      copy = copyCube)
+                                      excludeLeaks=False,
+                                      selectedRange=[55.0, 220.0], 
+                                      calTree=calTree, copy = copyCube)
     copyCube = False
     maskNotFF = True
     slicedCubes = specFrames2PacsCube(slicedFrames)
@@ -179,7 +184,8 @@ elif isRangeSpec(obs):
 # Building the wavelength grids for each slice
 # Used cal file: wavelengthGrid
 ffUpsample = getUpsample(obs)
-waveGrid=wavelengthGrid(slicedCubes, oversample=2, upsample=ffUpsample, calTree=calTree)
+waveGrid=wavelengthGrid(slicedCubes, oversample=2, upsample=ffUpsample, 
+                        calTree=calTree)
 # Active masks 
 
 slicedCubes = activateMasks(slicedCubes,
@@ -187,7 +193,8 @@ slicedCubes = activateMasks(slicedCubes,
                                       "SATURATION", "GRATMOVE", "BADFITPIX",
                                       "BADPIXELS"]), exclusive = True,
                                                      copy = copyCube)
-# Flag the remaining outliers (sigma-clipping in wavelength domain), with default parameters here
+# Flag the remaining outliers (sigma-clipping in wavelength domain), with 
+# default parameters here
 slicedCubes = specFlagOutliers(slicedCubes, waveGrid)
 # slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid)
 
@@ -208,7 +215,8 @@ if slicedRebinnedCubes.refs.size() > 0:
 
     # Combine the nod-A & nod-B rebinned cubes.
     # All cubes at the same raster position are averaged.
-    # This is the final science-grade product for spatially undersampled rasters and single pointings
+    # This is the final science-grade product for spatially undersampled rasters
+    # and single pointings
     slicedRebinnedCubes = specAddNodCubes(slicedRebinnedCubes)  
 
     # compute ra/dec meta keywords
@@ -297,9 +305,10 @@ if slicedRebinnedCubes.refs.size() > 0:
         del c1_nth, c9_nth, c129_nth
         
     # update the level 2 of the ObservationContext 
-    obs = updatePacsObservation(obs, 2.0, [slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 
-    slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
-    slicedProjectedEquidistantCubes])
+    obs = updatePacsObservation(obs, 2.0, [slicedRebinnedCubes, 
+    slicedProjectedCubes, slicedDrizzledCubes, slicedTable, 
+    slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, 
+    slicedInterpolatedEquidistantCubes, slicedProjectedEquidistantCubes])
     
     # remove variables to cleanup memory
     del slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize
@@ -312,7 +321,7 @@ else:
 
 # Delete some variables (memory clean-up)
 del slicedCubes, slicedFrames
-del copyCube, lineSpec, shortRange, maskNotFF, upsample, waveGrid
+del copyCube, lineSpec, shortRange, maskNotFF, waveGrid # was upsample
 del masksForRebinning, slicedRebinnedCubes
 
 # restore default sink state

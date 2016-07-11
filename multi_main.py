@@ -171,22 +171,31 @@ trackfile.close()
 
 obsid = 1342246381
 sey = str(obsid)+"_case1"
-obs_case1 = getObservation(obsid=obsid,poolLocation = '/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/pools/',poolName=sey)
+obs_case1 = getObservation(obsid=obsid, poolLocation=str(pool_dir), 
+                           poolName=sey)
 sey = str(obsid)+"_case2"
-obs_case2 = getObservation(obsid=obsid,poolLocation = '/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/pools/',poolName=sey)
+obs_case2 = getObservation(obsid=obsid, poolLocation=str(pool_dir),
+                           poolName=sey)
 sey = str(obsid)+"_case3"
-obs_case3 = getObservation(obsid=obsid,poolLocation = '/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/pools/',poolName=sey)
+obs_case3 = getObservation(obsid=obsid, poolLocation=str(pool_dir),
+                           poolName=sey)
+sey = str(obsid)+"_case4"
+obs_case3 = getObservation(obsid=obsid, poolLocation=str(pool_dir),
+                           poolName=sey)
 sey = str(obsid)+"_casen"
-obs_casen = getObservation(obsid=obsid,poolLocation = '/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/pools/',poolName=sey)
+obs_casen = getObservation(obsid=obsid, poolLocation=str(pool_dir),
+                           poolName=sey)
 
 slicedRC_t1 = obs_case1.level2.red.rcube.product
 slicedRC_t2 = obs_case2.level2.red.rcube.product
 slicedRC_t3 = obs_case3.level2.red.rcube.product
+slicedRC_t4 = obs_case4.level2.red.rcube.product
 slicedRC_n = obs_casen.level2.red.rcube.product
 
 cube_t1 = slicedRC_t1.get(0)
 cube_t2 = slicedRC_t2.get(0)
 cube_t3 = slicedRC_t3.get(0)
+cube_t4 = slicedRC_t3.get(0)
 cube_n = slicedRC_n.get(0)
 
 spaxX=2
@@ -194,16 +203,24 @@ spaxY=2
 wve_t1 = cube_t1.getWave()
 wve_t2 = cube_t2.getWave()
 wve_t3 = cube_t3.getWave()
+wve_t4 = cube_t4.getWave()
 wve_n = cube_n.getWave()
 flx_t1 = cube_t1.getFlux()[:, spaxX, spaxY]
 flx_t2 = cube_t2.getFlux()[:, spaxX, spaxY]
 flx_t3 = cube_t3.getFlux()[:, spaxX, spaxY]
+flx_t4 = cube_t3.getFlux()[:, spaxX, spaxY]
 flx_n = cube_n.getFlux()[:, spaxX, spaxY]
 
 p = PlotXY(titleText = "Comparation tests")
-p.addLayer(LayerXY(wve_t1, flx_t1, line = 1, name="no flatfielding selected"))
-p.addLayer(LayerXY(wve_t2, flx_t2, line = 1, name="flatfielding range selecting range"))
-p.addLayer(LayerXY(wve_t3, flx_t3, line = 1, name="flatfielding line selecting range"))
-p.addLayer(LayerXY(wve_n, flx_n, line = 1, name="flatfielding range whole range"))
+p.addLayer(LayerXY(wve_t1, flx_t1, line = 1,
+                   name="no flatfielding selected"))
+p.addLayer(LayerXY(wve_t2, flx_t2, line = 1,
+                   name="flatfielding range selecting range"))
+p.addLayer(LayerXY(wve_t3, flx_t3, line = 1,
+                   name="flatfielding line selecting range [198, 203]"))
+p.addLayer(LayerXY(wve_t4, flx_t4, line = 1,
+                   name="flatfielding line selecting range [199, 201]"))
+p.addLayer(LayerXY(wve_n, flx_n, line = 1, 
+                   name="flatfielding range whole range"))
 p.legend.visible = 1
 p.saveAsPNG("/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/comparation.png")

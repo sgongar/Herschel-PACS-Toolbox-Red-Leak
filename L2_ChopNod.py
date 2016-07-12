@@ -26,19 +26,12 @@ from herschel.ia.numeric import *
 from herschel.pacs.spg.pipeline import *  
 from herschel.pacs.spg.pipeline.ProductSinkHandling import *
 from herschel.pacs.spg.pipeline.spg_spec_tools import *
-"""
-first_case = "/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/1st_case.py"
-second_case = "/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/2nd_case.py"
-third_case = "/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/3rd_case.py"
-fourth_case = "/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/4th_case.py"
-normal_case = "/home/sgongora/Documents/Development/Herschel-PACS-Toolbox-Red-Leak/nth_case.py"
-"""
 
-first_case = str(working_dir) + '1st_case.py'
-second_case = str(working_dir) + '2nd_case.py'
-third_case = str(working_dir) + '3rd_case.py'
-fourth_case = str(working_dir) + '4th_case.py'
-normal_case = str(working_dir) + 'nth_case.py'
+first_case = str(working_dir) + 'case_noFF.py'
+second_case = str(working_dir) + 'case_FFRange_Sel.py'
+third_case = str(working_dir) + 'case_FFLine_198_203.py'
+fourth_case = str(working_dir) + 'case_FFLine_199_201.py'
+normal_case = str(working_dir) + 'case_FFRange_All.py'
 
 camera = 'red'
     

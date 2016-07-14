@@ -98,6 +98,24 @@ obsids = [1342213138, 1342213762, 1342215667, 1342230909, 1342230907,\
           1342257798, 1342259561, 1342262769]
 """
 
+list_dictionary = {}
+i = 0
+j = 0
+k = 0
+w = 0
+for i in range(len(obsids)):
+    if j == int(len(list(string.uppercase))):
+        j = 0
+        k = k + 1
+
+    if k == int(len(list(string.uppercase))):
+        k = 0
+        w = w + 1
+
+    print i, j, k, w
+
+    list_dictionary[obsids[i]] = 'SED' + str(list(string.uppercase)[k]) + str(list(string.uppercase)[j]) + str(list(string.uppercase)[w])
+    j = j + 1
 start_time = time.time()
 start_time_hr = datetime.datetime.fromtimestamp(start_time)
 start_time_hr = str(start_time_hr)

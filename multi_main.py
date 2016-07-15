@@ -146,6 +146,9 @@ for i in range(len(obsids.keys())):
     sey=str(obsid) + "_case4"
     obs_case4=getObservation(obsid=obsid, poolLocation=str(pool_dir),
                              poolName=sey)
+    sey=str(obsid) + "_case5"
+    obs_case5=getObservation(obsid=obsid, poolLocation=str(pool_dir),
+                             poolName=sey)
     sey=str(obsid) + "_casen"
     obs_casen=getObservation(obsid=obsid, poolLocation=str(pool_dir),
                              poolName=sey)
@@ -154,6 +157,7 @@ for i in range(len(obsids.keys())):
     slicedRC_t2 = obs_case2.level2.red.rcube.product
     slicedRC_t3 = obs_case3.level2.red.rcube.product
     slicedRC_t4 = obs_case4.level2.red.rcube.product
+    slicedRC_t5 = obs_case5.level2.red.rcube.product
     slicedRC_n = obs_casen.level2.red.rcube.product
 
     # Get the rebinned cubes of each test case
@@ -161,6 +165,7 @@ for i in range(len(obsids.keys())):
     cube_t2 = slicedRC_t2.get(0)
     cube_t3 = slicedRC_t3.get(0)
     cube_t4 = slicedRC_t4.get(0)
+    cube_t5 = slicedRC_t5.get(0)
     cube_n = slicedRC_n.get(0)
 
     # Central spaxel
@@ -171,24 +176,28 @@ for i in range(len(obsids.keys())):
     wve_t2 = cube_t2.getWave()
     wve_t3 = cube_t3.getWave()
     wve_t4 = cube_t4.getWave()
+    wve_t5 = cube_t5.getWave()
     wve_n = cube_n.getWave()
     flx_t1 = cube_t1.getFlux()[:, spaxX, spaxY]
     flx_t2 = cube_t2.getFlux()[:, spaxX, spaxY]
     flx_t3 = cube_t3.getFlux()[:, spaxX, spaxY]
     flx_t4 = cube_t4.getFlux()[:, spaxX, spaxY]
+    flx_t5 = cube_t5.getFlux()[:, spaxX, spaxY]
     flx_n = cube_n.getFlux()[:, spaxX, spaxY]
 
     # Main plot of all test cases
     main_plot = PlotXY(titleText="All tests cases")
     main_plot.addLayer(LayerXY(wve_t1, flx_t1, line=1,
                                name="no flatfielding selected",
-                               xrange=[196, 205]))
+                               xrange=[150, 205]))
     main_plot.addLayer(LayerXY(wve_t2, flx_t2, line=1,
                                name="flatfielding range selecting range [198, 203]"))
     main_plot.addLayer(LayerXY(wve_t3, flx_t3, line=1,
                                name="flatfielding line selecting range [198, 203]"))
     main_plot.addLayer(LayerXY(wve_t4, flx_t4, line=1,
                                name="flatfielding line selecting range [199, 201]"))
+    main_plot.addLayer(LayerXY(wve_t5, flx_t5, line=1,
+                               name="flatfielding line selecting range [161, 163]"))
     main_plot.addLayer(LayerXY(wve_n, flx_n, line=1, 
                                name="flatfielding range whole range [55, 220]"))
     main_plot.legend.visible=1
@@ -196,7 +205,7 @@ for i in range(len(obsids.keys())):
     main_plot.yaxis.tick.gridLines=1
     main_plot.saveAsPNG(str(plot_dir) + "FFComparison_" + str(obsid) +
                         "_200um_" + str(version) + ".png")
-
+    """
     # No flatfielding against flatfielding range selecting range [198, 203]
     test_plot_1 = PlotXY(titleText="NoFF vs. FFRangeSelecting [198, 203]")
     test_plot_1.addLayer(LayerXY(wve_t1, flx_t1, line=1,
@@ -331,7 +340,20 @@ for i in range(len(obsids.keys())):
     test_plot_10.saveAsPNG(str(plot_dir) +
                            "FFLineSelect[199_201]_vs_FFRangeSelect[55_220]_" +
                            str(obsid) + "_200um_" + str(version) + ".png")
-
+    """
+    test_plot_11 = PlotXY(titleText="FFLineSelecting [161, 163] against FFRangeSelecting [55, 220]")
+    test_plot_11.addLayer(LayerXY(wve_t5, flx_t5, line=1,
+                                  name="flatfielding line selecting range [161, 163]",
+                                  xrange=[196, 205]))
+    test_plot_11.addLayer(LayerXY(wve_n, flx_n, line=1, 
+                                  name="flatfielding range whole range [55, 220]"))
+    test_plot_11.legend.visible=1
+    test_plot_11.xaxis.tick.gridLines=1
+    test_plot_11.yaxis.tick.gridLines=1
+    test_plot_11.saveAsPNG(str(plot_dir) +
+                           "FFLineSelect[161_163]_vs_FFRangeSelect[55_220]_" +
+                           str(obsid) + "_200um_" + str(version) + ".png")
+    """
     # As Katrina requested
     test_plot_11 = PlotXY(titleText = "All tests cases without no FF test - Test range")
     test_plot_11.addLayer(LayerXY(wve_t2, flx_t2, line=1,
@@ -347,7 +369,6 @@ for i in range(len(obsids.keys())):
     test_plot_11.saveAsPNG(str(plot_dir) + "FFComparison_Katrina_" + str(obsid) +
                            "_200um_" + str(version) + ".png")
 
-    """
     desviation_list=Double1d()
     if (len(flx_t2) == len(flx_t3)):
         for i in range(len(flx_t2)):

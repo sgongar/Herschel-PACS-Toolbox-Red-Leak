@@ -24,22 +24,24 @@ import datetime
 import shutil
 import csv
 import string
-
-save_obs = False
-
-# Only for test reasons, change obsids for observations_dict_test
-obsids = {}
-obsids[1342246381] = "SEDA"
-
-start_time = time.time()
-start_time_hr = datetime.datetime.fromtimestamp(start_time)
-start_time_hr = str(start_time_hr)
+import thread
 
 home_dir = os.getenv("HOME")
 working_dir = str(home_dir) + '/hcss/workspace/Red-leak/'
 pool_dir = str(working_dir) + 'pools/'
 plot_dir = str(working_dir) + 'plots/'
 csv_obs = str(working_dir) + 'obs_ids.csv'
+
+save_obs = False
+
+# Only for test reasons, change obsids for observations_dict_test
+obsids = {}
+obsids[1342186305] = "SEDA"
+obsids[1342186798] = "SEDB"
+
+start_time = time.time()
+start_time_hr = datetime.datetime.fromtimestamp(start_time)
+start_time_hr = str(start_time_hr)
 
 if (not os.path.exists(working_dir)):
     os.mkdir(working_dir)
@@ -93,6 +95,9 @@ for i in range(len(obsids.keys())):
     # Next, get the data
     observations_dict["obs_{0}".format(obsids.keys()[i])] = getObservation(obsids.keys()[i],
                                                                            useHsa = 1)
+
+    obs = getObservation(obsids.keys()[i], useHsa = 1)
+
     # print outs to keep you up to date with progress
     actual_time = time.time()
     actual_time_hr = datetime.datetime.fromtimestamp(actual_time)
@@ -103,14 +108,14 @@ for i in range(len(obsids.keys())):
                     " with camera " + camera + " at " + str(actual_time_hr) +
                     "\n")
     trackfile.close()
-    """
-    runPacsPSG
-    saveObser
-    """
-    execfile(str(working_dir) + 'L05_Frames.py')
-    execfile(str(working_dir) + 'L1_ChopNod.py')
-    execfile(str(working_dir) + 'L2_ChopNod.py')
- 
+
+    runPacsSpg(cameraList=[camera],
+               obsIn=observations_dict["obs_{0}".format(obsids.keys()[i])])
+    
+    name = 'obs_' + str(obsid)
+    saveObservation(observations_dict["obs_{0}".format(obsids.keys()[i])],
+                    poolLocation = pool_dir, poolName = name)
+
     duration = time.time() - actual_time
     duration_m = int(duration/60)
     duration_s = duration - duration_m*60
@@ -121,10 +126,10 @@ for i in range(len(obsids.keys())):
                     str(duration_s) + ' s ' + '\n')
     trackfile.close()
 
+    """
+    # if there is a previous version upgrade version
     version='v4'
     obsid=1342246381
-    if int(obsids.keys()[i]) is int(obsid):
-        print "Everything is cool"
     sey=str(obsid) + "_case1"
     obs_case1=getObservation(obsid=obsid, poolLocation=str(pool_dir), 
                              poolName=sey)
@@ -140,8 +145,8 @@ for i in range(len(obsids.keys())):
     sey=str(obsid) + "_case5"
     obs_case5=getObservation(obsid=obsid, poolLocation=str(pool_dir),
                              poolName=sey)
-    sey=str(obsid) + "_casen"
-    obs_casen=getObservation(obsid=obsid, poolLocation=str(pool_dir),
+    sey=str(obsid) + "_case6"
+    obs_case6=getObservation(obsid=obsid, poolLocation=str(pool_dir),
                              poolName=sey)
 
     slicedRC_t1 = obs_case1.level2.red.rcube.product
@@ -149,7 +154,7 @@ for i in range(len(obsids.keys())):
     slicedRC_t3 = obs_case3.level2.red.rcube.product
     slicedRC_t4 = obs_case4.level2.red.rcube.product
     slicedRC_t5 = obs_case5.level2.red.rcube.product
-    slicedRC_n = obs_casen.level2.red.rcube.product
+    slicedRC_t6 = obs_case6.level2.red.rcube.product
 
     # Get the rebinned cubes of each test case
     cube_t1 = slicedRC_t1.get(0)
@@ -157,7 +162,7 @@ for i in range(len(obsids.keys())):
     cube_t3 = slicedRC_t3.get(0)
     cube_t4 = slicedRC_t4.get(0)
     cube_t5 = slicedRC_t5.get(0)
-    cube_n = slicedRC_n.get(0)
+    cube_t6 = slicedRC_t6.get(0)
 
     # Central spaxel
     spaxX=2
@@ -168,13 +173,13 @@ for i in range(len(obsids.keys())):
     wve_t3 = cube_t3.getWave()
     wve_t4 = cube_t4.getWave()
     wve_t5 = cube_t5.getWave()
-    wve_n = cube_n.getWave()
+    wve_t6 = cube_t6.getWave()
     flx_t1 = cube_t1.getFlux()[:, spaxX, spaxY]
     flx_t2 = cube_t2.getFlux()[:, spaxX, spaxY]
     flx_t3 = cube_t3.getFlux()[:, spaxX, spaxY]
     flx_t4 = cube_t4.getFlux()[:, spaxX, spaxY]
     flx_t5 = cube_t5.getFlux()[:, spaxX, spaxY]
-    flx_n = cube_n.getFlux()[:, spaxX, spaxY]
+    flx_t6 = cube_t6.getFlux()[:, spaxX, spaxY]
 
     # Main plot of all test cases
     main_plot = PlotXY(titleText="All tests cases")
@@ -189,14 +194,14 @@ for i in range(len(obsids.keys())):
                                name="flatfielding line selecting range [199, 201]"))
     main_plot.addLayer(LayerXY(wve_t5, flx_t5, line=1,
                                name="flatfielding line selecting range [161, 163]"))
-    main_plot.addLayer(LayerXY(wve_n, flx_n, line=1, 
+    main_plot.addLayer(LayerXY(wve_t6, flx_t6, line=1, 
                                name="flatfielding range whole range [55, 220]"))
     main_plot.legend.visible=1
     main_plot.xaxis.tick.gridLines=1
     main_plot.yaxis.tick.gridLines=1
     main_plot.saveAsPNG(str(plot_dir) + "FFComparison_" + str(obsid) +
                         "_200um_" + str(version) + ".png")
-    """
+
     # No flatfielding against flatfielding range selecting range [198, 203]
     test_plot_1 = PlotXY(titleText="NoFF vs. FFRangeSelecting [198, 203]")
     test_plot_1.addLayer(LayerXY(wve_t1, flx_t1, line=1,
@@ -241,7 +246,7 @@ for i in range(len(obsids.keys())):
     test_plot_4.addLayer(LayerXY(wve_t1, flx_t1, line=1,
                                  name="no flatfielding selected",
                                  xrange=[196, 205]))
-    test_plot_4.addLayer(LayerXY(wve_n, flx_n, line=1, 
+    test_plot_4.addLayer(LayerXY(wve_t6, flx_t6, line=1, 
                                  name="flatfielding range whole range [55, 220]"))
     test_plot_4.legend.visible=1
     test_plot_4.xaxis.tick.gridLines=1
@@ -282,7 +287,7 @@ for i in range(len(obsids.keys())):
     test_plot_7.addLayer(LayerXY(wve_t2, flx_t2, line=1,
                                 name="flatfielding range selecting range [198, 203]", 
                                 xrange=[196, 205]))
-    test_plot_7.addLayer(LayerXY(wve_n, flx_n, line=1, 
+    test_plot_7.addLayer(LayerXY(wve_t6, flx_t6, line=1, 
                                  name="flatfielding range whole range [55, 220]"))
     test_plot_7.legend.visible=1
     test_plot_7.xaxis.tick.gridLines=1
@@ -310,7 +315,7 @@ for i in range(len(obsids.keys())):
     test_plot_9.addLayer(LayerXY(wve_t3, flx_t3, line=1,
                                  name="flatfielding line selecting range [198, 203]",
                                  xrange=[196, 205]))
-    test_plot_9.addLayer(LayerXY(wve_n, flx_n, line=1, 
+    test_plot_9.addLayer(LayerXY(wve_t6, flx_t6, line=1, 
                                  name="flatfielding range whole range [55, 220]"))
     test_plot_9.legend.visible=1
     test_plot_9.xaxis.tick.gridLines=1
@@ -323,7 +328,7 @@ for i in range(len(obsids.keys())):
     test_plot_10.addLayer(LayerXY(wve_t4, flx_t4, line=1,
                                   name="flatfielding line selecting range [199, 201]",
                                   xrange=[196, 205]))
-    test_plot_10.addLayer(LayerXY(wve_n, flx_n, line=1, 
+    test_plot_10.addLayer(LayerXY(wve_t6, flx_t6, line=1, 
                                   name="flatfielding range whole range [55, 220]"))
     test_plot_10.legend.visible=1
     test_plot_10.xaxis.tick.gridLines=1
@@ -331,12 +336,12 @@ for i in range(len(obsids.keys())):
     test_plot_10.saveAsPNG(str(plot_dir) +
                            "FFLineSelect[199_201]_vs_FFRangeSelect[55_220]_" +
                            str(obsid) + "_200um_" + str(version) + ".png")
-    """
+
     test_plot_11 = PlotXY(titleText="FFLineSelecting [161, 163] against FFRangeSelecting [55, 220]")
     test_plot_11.addLayer(LayerXY(wve_t5, flx_t5, line=1,
                                   name="flatfielding line selecting range [161, 163]",
                                   xrange=[196, 205]))
-    test_plot_11.addLayer(LayerXY(wve_n, flx_n, line=1, 
+    test_plot_11.addLayer(LayerXY(wve_t6, flx_t6, line=1, 
                                   name="flatfielding range whole range [55, 220]"))
     test_plot_11.legend.visible=1
     test_plot_11.xaxis.tick.gridLines=1
@@ -344,7 +349,7 @@ for i in range(len(obsids.keys())):
     test_plot_11.saveAsPNG(str(plot_dir) +
                            "FFLineSelect[161_163]_vs_FFRangeSelect[55_220]_" +
                            str(obsid) + "_200um_" + str(version) + ".png")
-    """
+
     # As Katrina requested
     test_plot_11 = PlotXY(titleText = "All tests cases without no FF test - Test range")
     test_plot_11.addLayer(LayerXY(wve_t2, flx_t2, line=1,
@@ -352,7 +357,7 @@ for i in range(len(obsids.keys())):
                                   xrange=[196, 205]))
     test_plot_11.addLayer(LayerXY(wve_t3, flx_t3, line=1,
                                   name="flatfielding line selecting range [198, 203]"))
-    test_plot_11.addLayer(LayerXY(wve_n, flx_n, line=1, 
+    test_plot_11.addLayer(LayerXY(wve_t6, flx_t6, line=1, 
                                   name="flatfielding range whole range [55, 220]"))
     test_plot_11.legend.visible=1
     test_plot_11.xaxis.tick.gridLines=1
@@ -382,7 +387,7 @@ for i in range(len(obsids.keys())):
                                   xrange=[199, 201]))
     test_plot_13.addLayer(LayerXY(wve_t3, flx_t3, line=1,
                                   name="flatfielding line selecting range [198, 203]"))
-    test_plot_13.addLayer(LayerXY(wve_n, flx_n, line=1, 
+    test_plot_13.addLayer(LayerXY(wve_t6, flx_t6, line=1, 
                                   name="flatfielding range whole range [55, 220]"))
     test_plot_13.legend.visible=1
     test_plot_13.xaxis.tick.gridLines=1

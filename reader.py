@@ -283,8 +283,8 @@ obs_23 = [1342213138, 1342213762, 1342215667, 1342230909, 1342230907,\
 f = open(sys.argv[1], 'wt')
 try:
     writer = csv.writer(f)
-    for i in range(len(obs_23)):
-        writer.writerow(('range_23', obs_23[i]))
+    for i in range(len(obsids)):
+        writer.writerow(('obs_ids', obsids[i]))
 finally:
     f.close()
 

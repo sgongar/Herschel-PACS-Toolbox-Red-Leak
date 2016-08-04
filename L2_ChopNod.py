@@ -31,7 +31,8 @@ first_case = str(working_dir) + 'case_noFF.py'
 second_case = str(working_dir) + 'case_FFRange_Sel.py'
 third_case = str(working_dir) + 'case_FFLine_198_203.py'
 fourth_case = str(working_dir) + 'case_FFLine_199_201.py'
-normal_case = str(working_dir) + 'case_FFRange_All.py'
+fifth_case = str(working_dir) + 'case_FFLine_161_163.py'
+six_case = str(working_dir) + 'case_FFRange_All.py'
 
 camera = 'red'
     
@@ -156,15 +157,34 @@ trackfile.write('End fourth case ' + str(obsids.keys()[i]) + " " + camera +
                 ' s ' + '\n')
 trackfile.close()
 
-# Normal case
-normal_case_start = time.time()
+# Fifth case
+fifth_case_start = time.time()
+
 slicedCubes = slicedCubes_copy.copy()
 slicedFrames = slicedFrames_copy.copy()
-execfile(str(normal_case))
-name = str(obsid) + "_casen"
+execfile(str(fifth_case))
+name = str(obsid) + "_case5"
 saveObservation(obs, poolLocation = pool_dir, poolName = name)
 
-test_time = time.time() - normal_case_start
+test_time = time.time() - fifth_case_start
+test_time_m = int(test_time/60)
+test_time_s = int(test_time - test_time_m*60)
+ 
+trackfile = open(trackfilename, 'a')
+trackfile.write('End fifth case ' + str(obsids.keys()[i]) + " " + camera +
+                ' Duration: ' + str(test_time_m) + ' m ' + str(test_time_s) + 
+                ' s ' + '\n')
+trackfile.close()
+
+# Six case
+six_case_start = time.time()
+slicedCubes = slicedCubes_copy.copy()
+slicedFrames = slicedFrames_copy.copy()
+execfile(str(six_case))
+name = str(obsid) + "_case6"
+saveObservation(obs, poolLocation = pool_dir, poolName = name)
+
+test_time = time.time() - six_case_start
 test_time_m = int(test_time/60)
 test_time_s = int(test_time - test_time_m*60)
  

@@ -72,6 +72,12 @@ from herschel.pacs.spg.pipeline import *
 from herschel.pacs.spg.pipeline.ProductSinkHandling import *
 from herschel.pacs.spg.pipeline.spg_spec_tools import *
 
+
+def replMap(product,key='redLeak'):
+     map = MapContext()
+     map.refs[key] = ProductRef(product)
+     return map
+
 #
 #*******************************************************************************
 # Preparation
@@ -108,12 +114,7 @@ except NameError:
 # extract level1 frames  and cubes for your camera   
 slicedCubes = level1.cube.getCamera(camera).product
 slicedFrames = level1.fitted.getCamera(camera).product
-# Computes the telescope background flux and scales the normalized signal with the telescope background flux using asymmetric chopping
-# slicedFramesCal, background = specRespCalToTelescope(slicedFrames, obs.auxiliary.hk, calTree = calTree, reduceNoise=1, copy=1)
-# convert the Frames to a PacsCube
-# slicedCubesCal = specFrames2PacsCube(slicedFramesCal)     
-# compute ra/dec meta keywords
-# slicedCubesCal = centerRaDecMetaData(slicedCubesCal)
+
 #
 # ***********************************************************************************
 #         Processing
@@ -138,14 +139,11 @@ if lineSpec or shortRange:
     # 1. Flag outliers and rebin
     waveGrid=wavelengthGrid(slicedCubes, oversample=2, upsample=ffUpsample, calTree=calTree)
     slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "BADPIXELS", "INVALID"]), exclusive = True, copy = copyCube)
-    # slicedCubesCal = activateMasks(slicedCubesCal, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "BADPIXELS", "INVALID"]), exclusive = True, copy = copyCube)
     copyCube = False
     slicedCubes = specFlagOutliers(slicedCubes, waveGrid, nSigma=5, nIter=1)
-    # slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid, nSigma=5, nIter=1)
     slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","NOISYPIXELS","RAWSATURATION","SATURATION","GRATMOVE", "OUTLIERS", "BADPIXELS", "INVALID"]), exclusive = True)
     slicedRebinnedCubes = specWaveRebin(slicedCubes, waveGrid)
     slicedCubes = selectSlices(slicedCubes,refContext=slicedRebinnedCubes)
-    # slicedCubesCal = selectSlices(slicedCubesCal,refContext=slicedRebinnedCubes)
 
     width = 2.5
     if isRangeSpec(obs):
@@ -153,26 +151,18 @@ if lineSpec or shortRange:
         
     # 2. mask the line
     slicedCubes = maskLines(slicedCubes,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0,maskType="INLINE")
-    # slicedCubesCal = maskLines(slicedCubesCal,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0,maskType="INLINE")
     # 3. do the flatfielding
-    # Without maxRange
-    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
-    # slicedCubesCal = specFlatFieldLine(slicedCubesCal, calTree = calTree, scaling=1, maxrange=[55.,190.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
+    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[55.,220.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
     # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse to overwrite OUTLIERS) & deactivate mask INLINE
     slicedCubes.renameMask("OUTLIERS", "OUTLIERS_B4FF")
     slicedCubes = deactivateMasks(slicedCubes, String1d(["INLINE", "OUTLIERS_B4FF"]))
-    # slicedCubesCal.renameMask("OUTLIERS", "OUTLIERS_B4FF")
-    # slicedCubesCal = deactivateMasks(slicedCubesCal, String1d(["INLINE", "OUTLIERS_B4FF"]))
     del ffUpsample, width
 elif isRangeSpec(obs):
-    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False, calTree = calTree, copy = copyCube)
-    # slicedFramesCal = specFlatFieldRange(slicedFramesCal,useSplinesModel=True, excludeLeaks=True, calTree = calTree, copy = copyCube)
+    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False, selectedRange=[55.0, 220.0], calTree = calTree, copy = copyCube, wlIntervalKnots={1:2.0, 2:3.0, 3:2.0})
     copyCube = False
     maskNotFF = True
     slicedCubes = specFrames2PacsCube(slicedFrames)
-    # slicedCubesCal = specFrames2PacsCube(slicedFramesCal)
     slicedCubes = centerRaDecMetaData(slicedCubes)
-    # slicedCubesCal = centerRaDecMetaData(slicedCubesCal)
 
     
 # Building the wavelength grids for each slice
@@ -183,12 +173,10 @@ waveGrid=wavelengthGrid(slicedCubes, oversample=2, upsample = upsample, calTree 
 #
 # Active masks 
 slicedCubes = activateMasks(slicedCubes, String1d(["GLITCH","UNCLEANCHOP","SATURATION","GRATMOVE", "BADFITPIX", "BADPIXELS"]), exclusive = True, copy = copyCube)
-# slicedCubesCal = activateMasks(slicedCubesCal, String1d(["GLITCH","UNCLEANCHOP","SATURATION","GRATMOVE", "BADFITPIX", "BADPIXELS"]), exclusive = True, copy = copyCube)
 #
 #
 # Flag the remaining outliers (sigma-clipping in wavelength domain), with default parameters here
 slicedCubes = specFlagOutliers(slicedCubes, waveGrid)
-# slicedCubesCal = specFlagOutliers(slicedCubesCal, waveGrid)
 #
 #
 # Rebin all cubes on consistent wavelength grids
@@ -203,16 +191,12 @@ if slicedRebinnedCubes.refs.size() > 0:
 
     # Select only the slices in the PACS cube which are also in the rebinned cube
     slicedCubes = selectSlices(slicedCubes,refContext=slicedRebinnedCubes)
-    # slicedCubesCal = selectSlices(slicedCubesCal,refContext=slicedRebinnedCubes)
 
     # Combine the nod-A & nod-B rebinned cubes.
     # All cubes at the same raster position are averaged.
     # This is the final science-grade product for spatially undersampled rasters and single pointings
     slicedRebinnedCubes = specAddNodCubes(slicedRebinnedCubes)  
 
-    # Computes the telescope background flux and scales the normalized signal with the telescope background flux
-    # slicedRebinnedCubes, background = specRespCalToTelescope(slicedRebinnedCubes, obs.auxiliary.hk, calTree = calTree)
-    
     # compute ra/dec meta keywords
     slicedRebinnedCubes = centerRaDecMetaData(slicedRebinnedCubes)
     
@@ -268,10 +252,31 @@ if slicedRebinnedCubes.refs.size() > 0:
         del c1, c9, c129
         
     # update the level 2 of the ObservationContext 
-    obs = updatePacsObservation(obs, 2.0, [slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 
+    obs = updatePacsObservation(obs, 2.0, [slicedCubes, slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 
     slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
     slicedProjectedEquidistantCubes])
-    
+
+    level2 = obs.level2.copy()
+
+    #We are only changing the level2 cubes in the red, spectral tables are out
+    productNames=level2.refs.keys()
+    productNamesRed=[ name for name in productNames if (name[::-1].find('R') == 0) and (name.find('HPS3D') == 0)]
+
+    #The mapContext creates a subdirectory and has the advantage it creates a filename_extension.fits
+    #mapContext class is used as a proxy to have various sliced products below
+    for prodIndiv in productNamesRed:
+        product = level2.refs[prodIndiv].product
+        level2.refs[prodIndiv] = ProductRef(replMap(product))
+        level2.refs[prodIndiv].product.refs['redLeak'].product.type = prodIndiv+'_redLeak'
+
+    """
+    # update the level 2 of the ObservationContext 
+    obs = updatePacsObservation(obs, 2.0, [slicedCubes, slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 
+    slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
+    slicedProjectedEquidistantCubes])
+    """
+    obs.level2 = level2
+
     # remove variables to cleanup memory
     del slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize, oversampleSpace, upsampleSpace, pixFrac, source, mapType, \
     slicedDrizzledCubes, slicedDrizzledEquidistantCubes, slicedInterpolatedCubes, slicedInterpolatedEquidistantCubes, \
@@ -280,7 +285,7 @@ else:
     LOGGER.warning("No slices left anymore after filtering red-leak and out-of-band slices.")
 
 # Delete some variables (memory clean-up)
-del slicedCubes, slicedFrames, \
+del slicedCubes, slicedFrames,\
 copyCube, lineSpec, shortRange, maskNotFF, upsample, waveGrid, masksForRebinning, slicedRebinnedCubes
 
 # restore default sink state

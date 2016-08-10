@@ -2,17 +2,20 @@
 
 #### Final pipeline scripts 
 These scripts are the final versions for pipeline process.
+
+Are locate at: 
+
+`~/.hcss.d/repository/modules/hcss/pacs_spg_pipeline/<HIPE.VERSION>/herschel/pacs/spg/pipeline/ipipe/spec/`
 ##### L05_Frames.py
  - No changes were applied to this pipeline section.
 
 ##### L1_ChopNod.py
-- Calibration schema was changed to TBN to RSRF calibration.
-Old one.
+- Calibration schema was changed to TBN to RSRF calibration. The following lines are erase.
 ```python
 # calculate the differential signal of each on-off pair for each chopper cycle
 slicedFrames = specDiffChop(slicedFrames, scical = "sci", keepall = False, normalize=True)
 ```
-New one.
+- The old lines are replaced for these new ones.
 ```python
 csResponseAndDark = specDiffCs(calBlock, calTree=calTree)
 #
@@ -31,7 +34,7 @@ slicedFrames = specRespCal(slicedFrames, csResponseAndDark = csResponseAndDark,
 			                     calTree=calTree) 
 ```
 ##### L2_ChopNod.py
- - These lines have been removed from the original one.
+ - These lines have been removed from the original one. They are not longer necessaries.
 ```python
 slicedFramesCal, background = specRespCalToTelescope(slicedFrames, obs.auxiliary.hk,
                                                      calTree = calTree, reduceNoise=1,
@@ -71,7 +74,7 @@ slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, slope
 slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False,
                                   calTree=calTree, copy=copyCube)
 ```
-
+ - Since there is no more SlicedCubesCal all the references in the script should be removed.
 ```python
 slicedDrizzledCubes = drizzle(slicedCubes, wavelengthGrid=waveGridForDrizzle, spatialGrid=spaceGrid)[0]
 obs = updatePacsObservation(obs, 2.0, [slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 

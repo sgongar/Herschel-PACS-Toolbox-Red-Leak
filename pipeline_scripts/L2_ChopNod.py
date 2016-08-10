@@ -201,7 +201,7 @@ if slicedRebinnedCubes.refs.size() > 0:
     slicedRebinnedCubes = centerRaDecMetaData(slicedRebinnedCubes)
     
     # convert the cubes to a table 
-    slicedTable = pacsSpecCubeToTable(slicedRebinnedCubes)
+    # slicedTable = pacsSpecCubeToTable(slicedRebinnedCubes)
       
     # Compute equidistant wavelength grid for equidistant regridding
     equidistantWaveGrid = wavelengthGrid(slicedCubes, oversample=2, upsample = upsample, calTree = calTree, regularGrid = True, fracMinBinSize = 0.35)
@@ -253,7 +253,8 @@ if slicedRebinnedCubes.refs.size() > 0:
         
     # update the level 2 of the ObservationContext 
     obs = updatePacsObservation(obs, 2.0, [slicedCubes, slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 
-    slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
+    slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
+#    slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
     slicedProjectedEquidistantCubes])
 
     level2 = obs.level2.copy()
@@ -278,7 +279,8 @@ if slicedRebinnedCubes.refs.size() > 0:
     obs.level2 = level2
 
     # remove variables to cleanup memory
-    del slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize, oversampleSpace, upsampleSpace, pixFrac, source, mapType, \
+#    del slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize, oversampleSpace, upsampleSpace, pixFrac, source, mapType, \
+    del equidistantWaveGrid, driz, pixelSize, interpolatePixelSize, oversampleSpace, upsampleSpace, pixFrac, source, mapType, \
     slicedDrizzledCubes, slicedDrizzledEquidistantCubes, slicedInterpolatedCubes, slicedInterpolatedEquidistantCubes, \
     slicedProjectedCubes, slicedProjectedEquidistantCubes, spectra1d
 else:

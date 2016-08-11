@@ -150,10 +150,10 @@ if lineSpec or shortRange:
     slicedCubes = maskLines(slicedCubes,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0)
 
     # 3. do the flatfielding
-    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[55.,190.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
+    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[55.,220.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
     del ffUpsample, width
 elif isRangeSpec(obs):
-    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False, calTree = calTree, copy = copyCube)
+    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False, selectedRange=[55.0, 220.0], calTree = calTree, copy = copyCube, wlIntervalKnots={1:2.0, 2:3.0, 3:2.0})
     copyCube = False
     maskNotFF = True
     slicedCubes = specFrames2PacsCube(slicedFrames)
@@ -209,7 +209,7 @@ if slicedRebinnedCubes.refs.size()>0:
     slicedRebinnedCubes = centerRaDecMetaData(slicedRebinnedCubes)
     
     # convert the cubes to a table 
-    slicedTable = pacsSpecCubeToTable(slicedRebinnedCubes)
+    # slicedTable = pacsSpecCubeToTable(slicedRebinnedCubes)
     
     # Compute equidistant wavelength grid for equidistant regridding
     equidistantWaveGrid = wavelengthGrid(slicedCubes, oversample=2, upsample = upsample, calTree = calTree, regularGrid = True, fracMinBinSize = 0.35)
@@ -271,9 +271,26 @@ if slicedRebinnedCubes.refs.size()>0:
     # update the level 2 of the ObservationContext 
     obs = updatePacsObservation(obs, 2.0, [slicedCubes, slicedRebinnedCubes, slicedProjectedCubes, \
     slicedDrizzledCubes, slicedDrizzledEquidistantCubes,  slicedProjectedEquidistantCubes, \
-    slicedTable, slicedInterpolatedCubes, slicedInterpolatedEquidistantCubes, spectra1d])
+    # slicedTable, slicedInterpolatedCubes, slicedInterpolatedEquidistantCubes, spectra1d])
+    slicedInterpolatedCubes, slicedInterpolatedEquidistantCubes, spectra1d])
+
+    level2 = obs.level2.copy()
+
+    #We are only changing the level2 cubes in the red, spectral tables are out
+    productNames=level2.refs.keys()
+    productNamesRed=[ name for name in productNames if (name[::-1].find('R') == 0)]
+
+    #The mapContext creates a subdirectory and has the advantage it creates a filename_extension.fits
+    #mapContext class is used as a proxy to have various sliced products below
+    for prodIndiv in productNamesRed:
+        product = level2.refs[prodIndiv].product
+        level2.refs[prodIndiv] = ProductRef(replMap(product))
+        level2.refs[prodIndiv].product.refs['redLeak'].product.type = prodIndiv+'_redLeak'
+
+    obs.level2 = level2
     
-    del slicedOffRebinnedCubes, slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize, \
+    del slicedOffRebinnedCubes, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize, \
+    # del slicedOffRebinnedCubes, slicedTable, equidistantWaveGrid, driz, pixelSize, interpolatePixelSize, \
     oversampleSpace, upsampleSpace, pixFrac, source, mapType, slicedProjectedCubes, \
     slicedInterpolatedCubes, slicedDrizzledCubes, slicedDrizzledEquidistantCubes, \
     slicedProjectedEquidistantCubes, slicedInterpolatedEquidistantCubes, spectra1d

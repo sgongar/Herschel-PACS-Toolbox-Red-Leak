@@ -85,7 +85,7 @@ obs = updatePacsObservation(obs, 2.0, [slicedRebinnedCubes, slicedProjectedCubes
 del slicedCubes, slicedFrames, \
 copyCube, lineSpec, shortRange, maskNotFF, upsample, waveGrid, masksForRebinning, slicedRebinnedCubes
 ```
-##### L2_UnchopNod.py
+##### L2_Unchopped.py
  - excludeLeaks should be set to False instead True. The calibration schema will remain in the same way.
 ```python
 slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False,

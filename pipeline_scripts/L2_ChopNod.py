@@ -248,7 +248,8 @@ if slicedRebinnedCubes.refs.size() > 0:
             c1, c9, c129 = extractCentralSpectrum(slicedRebinnedCubes, smoothing='filter', width=50, preFilterWidth=15,  calTree=calTree)
         else:
             c1, c9, c129 = extractCentralSpectrum(slicedRebinnedCubes, smoothing='median', calTree=calTree)
-        spectra1d = fillPacsCentralSpectra(slicedRebinnedCubes, c1, c129, c9)
+        # spectra1d = fillPacsCentralSpectra(slicedRebinnedCubes, c1, c129, c9)
+        spectra1d = fillPacsCentralSpectra(slicedRebinnedCubes, c1, c9)
         del c1, c9, c129
         
     # update the level 2 of the ObservationContext 
@@ -261,7 +262,7 @@ if slicedRebinnedCubes.refs.size() > 0:
 
     #We are only changing the level2 cubes in the red, spectral tables are out
     productNames=level2.refs.keys()
-    productNamesRed=[ name for name in productNames if (name[::-1].find('R') == 0) and (name.find('HPS3D') == 0)]
+    productNamesRed=[ name for name in productNames if (name[::-1].find('R') == 0)]
 
     #The mapContext creates a subdirectory and has the advantage it creates a filename_extension.fits
     #mapContext class is used as a proxy to have various sliced products below
@@ -270,12 +271,6 @@ if slicedRebinnedCubes.refs.size() > 0:
         level2.refs[prodIndiv] = ProductRef(replMap(product))
         level2.refs[prodIndiv].product.refs['redLeak'].product.type = prodIndiv+'_redLeak'
 
-    """
-    # update the level 2 of the ObservationContext 
-    obs = updatePacsObservation(obs, 2.0, [slicedCubes, slicedRebinnedCubes, slicedProjectedCubes, slicedDrizzledCubes, 
-    slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
-    slicedProjectedEquidistantCubes])
-    """
     obs.level2 = level2
 
     # remove variables to cleanup memory

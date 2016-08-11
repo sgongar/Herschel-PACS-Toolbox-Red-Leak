@@ -1,1 +1,19 @@
-Source code used for preliminary tests.
+#### Source code used for preliminary tests.
+- L05_Frames.py
+  - First stage of pipeline process.
+- L1_ChopNod.py
+  - Second stage of pipeline process.
+- L2_ChopNod.py
+  - Third starge of pipeline process.
+- case_FFLine_161_163.py
+  - Line flatfielding resctricted to [161, 163] microns wavelength range.
+- case_FFLine_198_203.py
+  - Line flatfielding resctricted to [199, 203] microns wavelength range.
+- case_FFLine_199_201.py
+  - Line flatfielding resctricted to [199, 201] microns wavelength range.
+- case_FFRange_All.py
+  - Range flatfielding resctricted to [55, 220] microns wavelength range.
+- case_FFRange_Sel.py
+  - Range flatfielding restricted to [198, 203] microns wavelength range.
+- case_noFF.py
+  - Flatfielding process not applied.

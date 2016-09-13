@@ -31,7 +31,7 @@ working_dir = str(home_dir) + '/hcss/workspace/Red_Leak/'
 pool_dir = str(working_dir) + 'pools/'
 tars_dir = str(pool_dir) + 'tars/'
 plot_dir = str(working_dir) + 'plots/'
-csv_obs = str(working_dir) + 'obs_ids/obs_ids_5.csv'
+csv_obs = str(working_dir) + 'obs_ids/obs_ids_7.csv'
 
 save_obs = False
 
@@ -141,9 +141,9 @@ for i in range(len(obs_list)):
     j = j + 1
 
 # Create file for tracking the progress
-trackfilename = working_dir + "RedLeakMultiObs_5.txt"
+trackfilename = working_dir + "RedLeakMultiObs_7.txt"
 trackfile = open(trackfilename, 'w')
-trackfile.write("Starting process at %s - Machine 5\n" %(start_time_hr))
+trackfile.write("Starting process at %s - Machine 7\n" %(start_time_hr))
 trackfile.close()
 
 # Structure holding the final cubes for every pair [obsid,camera]

@@ -2,7 +2,7 @@ from os import getenv, path, mkdir
 from time import time
 import datetime
 from csv import reader
-import string
+from string import uppercase
 import shutil
 
 #  coding = utf-8
@@ -37,6 +37,9 @@ def get_formatted_time():
 
 
 def save_exception(exception):
+    """ Save expection to file
+
+    """
     print exception
 
 
@@ -81,18 +84,18 @@ j = 0
 k = 0
 w = 0
 for i in range(len(obs_list)):
-    if j == int(len(list(string.uppercase))):
+    if j == int(len(list(uppercase))):
         j = 0
         k = k + 1
 
-    if k == int(len(list(string.uppercase))):
+    if k == int(len(list(uppercase))):
         k = 0
         w = w + 1
 
     observations_dict[obs_list[i]] = 'SED' +\
-                                     str(list(string.uppercase)[j]) +\
-                                     str(list(string.uppercase)[k]) +\
-                                     str(list(string.uppercase)[w])
+                                     str(list(uppercase)[j]) +\
+                                     str(list(uppercase)[k]) +\
+                                     str(list(uppercase)[w])
     j = j + 1
 
 # Create file for tracking the progress
@@ -111,7 +114,7 @@ for i in range(len(obs_list)):
     camera = 'red'
     # Next, get the data
     obs_number = observations_dict.keys()[i]
-    observations_dictionary[obs_number] = getObservation(obs_number, useHsa = 1)
+    observations_dictionary[obs_number] = getObservation(obs_number, useHsa=1)
 
     trackfile = open(trackfilename, 'a')
     trackfile.write("Processing observation " +
@@ -119,24 +122,35 @@ for i in range(len(obs_list)):
                     " at " + str(get_formatted_time()) + "\n")
     trackfile.close()
 
-    runPacsSpg(cameraList=[camera], obsIn=observations_dictionary[obs_number])
+    runPacsSpg(cameraList=[camera],
+               obsIn=observations_dictionary[obs_number])
 
     name = 'obs_' + str(observations_dict.keys()[i])
+
     try:
-        print "Trying to save observation"
+        print "Saving observation: ", obs_number
         saveObservation(observations_dictionary[obs_number],
                         poolLocation=pool_dir, poolName=name)
         print "Observation saved"
     except Exception as e:
         save_exception(e)
-        print "Exception raised", e
+        print "Exception raised ", e
+    
+    try:
+        print "Exporting observation: ", obs_number
+        exportObservation(pool=PoolManager.getPool(obs_number), 
+                          urn=obs_number + ":herschel.ia.obs.ObservationContext:0",
+                          dirout=pool_dir + "Export414880784329918512DIR/" + obs_number)
+    except Exception as e:
+        save_exception(e)
+        print "Exception raised ", e
 
-    exportObservation(pool=PoolManager.getPool('1342199235'), 
-                      urn="urn:1342199235:herschel.ia.obs.ObservationContext:0",
-                      dirout=pool_dir + "Export414880784329918512DIR/" +
-                                         observations_dict.keys()[i])
-    compress(inputpath=pool_dir + "/Export414880784329918512DIR/1342199235",
-             archive=pool_dir + "1342199235_1.tgz", compression="TGZ")
+    try:
+        print "Compressing file for observation: ", obs_number
+
+    try: 
+        compress(inputpath=pool_dir + "/Export414880784329918512DIR/" + obs_number,
+                 archive=pool_dir + obs_number + ".tgz", compression="TGZ")
 
     duration = time.time() - actual_time
     duration_m = int(duration/60)

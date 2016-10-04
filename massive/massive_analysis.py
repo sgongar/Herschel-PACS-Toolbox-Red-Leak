@@ -36,6 +36,10 @@ def get_formatted_time():
     return time_hr
 
 
+def save_exception(exception):
+    print exception
+
+
 # Load directories
 # In our case we assumed that ...
 
@@ -101,32 +105,38 @@ trackfile.close()
 observations_dictionary = {}
 finalCubeList = []
 
+# TODO try-except raising all the problems to external file
 # Run pipeline over obs
 for i in range(len(obs_list)):
     camera = 'red'
     # Next, get the data
-    obs_key = "obs_{0}".format(observations_dict.keys()[i])
-    observations_dictionary[obs_key] = getObservation(observations_dict.keys()[i], useHsa = 1)
+    obs_number = observations_dict.keys()[i]
+    observations_dictionary[obs_number] = getObservation(obs_number, useHsa = 1)
 
     trackfile = open(trackfilename, 'a')
     trackfile.write("Processing observation " +
-                    str(observations_dict.keys()[i]) + " with camera " + camera +
+                    str(obs_number) + " with camera " + camera +
                     " at " + str(get_formatted_time()) + "\n")
     trackfile.close()
 
-    runPacsSpg(cameraList=[camera],
-               obsIn=observations_dictionary["obs_{0}".format(observations_dict.keys()[i])])
+    runPacsSpg(cameraList=[camera], obsIn=observations_dictionary[obs_number])
 
     name = 'obs_' + str(observations_dict.keys()[i])
-    saveObservation(observations_dictionary["obs_{0}".format(observations_dict.keys()[i])],
-                    poolLocation=pool_dir, poolName=name)
-
     try:
-        shutil.make_archive(str(pool_dir) + 'zips/' + str(name), 'zip',
-                            str(pool_dir) + str(name))
-        shutil.rmtree(str(pool_dir) + str(name))
-    except:
-        print "Compression of observation %s coulnd't be possible" %(str(observations_dict.keys()[i]))
+        print "Trying to save observation"
+        saveObservation(observations_dictionary[obs_number],
+                        poolLocation=pool_dir, poolName=name)
+        print "Observation saved"
+    except Exception as e:
+        save_exception(e)
+        print "Exception raised", e
+
+    exportObservation(pool=PoolManager.getPool('1342199235'), 
+                      urn="urn:1342199235:herschel.ia.obs.ObservationContext:0",
+                      dirout=pool_dir + "Export414880784329918512DIR/" +
+                                         observations_dict.keys()[i])
+    compress(inputpath=pool_dir + "/Export414880784329918512DIR/1342199235",
+             archive=pool_dir + "1342199235_1.tgz", compression="TGZ")
 
     duration = time.time() - actual_time
     duration_m = int(duration/60)

@@ -3,6 +3,7 @@ import shutil
 import os
 
 home_dir = os.getenv("HOME")
+# home_dir = '/home2/sgongora'
 working_dir = str(home_dir) + '/hcss/workspace/Red_Leak/'
 pool_dir = str(working_dir) + 'pools/'
 

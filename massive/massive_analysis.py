@@ -3,7 +3,6 @@ from time import time
 import datetime
 from csv import reader
 from string import uppercase
-import shutil
 
 #  coding = utf-8
 #
@@ -42,6 +41,33 @@ def save_exception(exception):
     """
     print exception
 
+    
+def create_dictionary(obs_list):
+    """ Create dictionary from observations list
+    
+    """
+    observations_dict = {}
+    i = 0
+    j = 0
+    k = 0
+    w = 0
+    for i in range(len(obs_list)):
+        if j == int(len(list(uppercase))):
+            j = 0
+            k = k + 1
+
+        if k == int(len(list(uppercase))):
+            k = 0
+            w = w + 1
+
+        obs_dict[obs_list[i]] = 'SED' +
+                                list(uppercase)[j] +
+                                list(uppercase)[k] +
+                                list(uppercase)[w]
+        j = j + 1
+        
+    return obs_dict
+
 
 # Load directories
 # In our case we assumed that ...
@@ -53,11 +79,6 @@ zips_dir = str(pool_dir) + 'zips/'
 csv_obs = str(working_dir) + 'obs_ids.csv'
 
 save_obs = False
-
-# Only for test reasons, change obsids for observations_dict_test
-obsids = {}
-obsids[1342186305] = "SEDA"
-obsids[1342186798] = "SEDB"
 
 start_time = time.time()
 start_time_hr = datetime.datetime.fromtimestamp(start_time)
@@ -77,26 +98,6 @@ with open(str(csv_obs), 'rb') as f:
     for row in row_reader:
         obs_list.append(row[1])
 
-# Create dictionary from list
-observations_dict = {}
-i = 0
-j = 0
-k = 0
-w = 0
-for i in range(len(obs_list)):
-    if j == int(len(list(uppercase))):
-        j = 0
-        k = k + 1
-
-    if k == int(len(list(uppercase))):
-        k = 0
-        w = w + 1
-
-    observations_dict[obs_list[i]] = 'SED' +\
-                                     str(list(uppercase)[j]) +\
-                                     str(list(uppercase)[k]) +\
-                                     str(list(uppercase)[w])
-    j = j + 1
 
 # Create file for tracking the progress
 trackfilename = working_dir + "RedLeakMultiObs.txt"
@@ -105,14 +106,14 @@ trackfile.write("Starting process at %s \n" %(get_formatted_time()))
 trackfile.close()
 
 # Structure holding the final cubes for every pair [obsid,camera]
-observations_dictionary = {}
+observations_dictionary = create_dictionary(obs_list)
 finalCubeList = []
 
 # TODO try-except raising all the problems to external file
 # Run pipeline over obs
 for i in range(len(obs_list)):
     camera = 'red'
-    # Next, get the data
+
     obs_number = observations_dict.keys()[i]
     observations_dictionary[obs_number] = getObservation(obs_number, useHsa=1)
 
@@ -134,23 +135,25 @@ for i in range(len(obs_list)):
         print "Observation saved"
     except Exception as e:
         save_exception(e)
-        print "Exception raised ", e
+        print "An exception was raised during saving process ", e
     
     try:
         print "Exporting observation: ", obs_number
         exportObservation(pool=PoolManager.getPool(obs_number), 
                           urn=obs_number + ":herschel.ia.obs.ObservationContext:0",
-                          dirout=pool_dir + "Export414880784329918512DIR/" + obs_number)
+                          dirout=pool_dir + "Export/" + obs_number)
     except Exception as e:
         save_exception(e)
-        print "Exception raised ", e
+        print "An exception was raised during exporting process ", e
 
     try:
         print "Compressing file for observation: ", obs_number
-
-    try: 
-        compress(inputpath=pool_dir + "/Export414880784329918512DIR/" + obs_number,
+        compress(inputpath=pool_dir + "Export/" + obs_number,
                  archive=pool_dir + obs_number + ".tgz", compression="TGZ")
+        
+    except Exception as e:
+        save_exception(e)
+        print "An exception was raised during compression process", e
 
     duration = time.time() - actual_time
     duration_m = int(duration/60)
@@ -158,7 +161,7 @@ for i in range(len(obs_list)):
 
     camera = 'red'
     trackfile = open(trackfilename, 'a')
-    trackfile.write('End ' + str(observations_dict.keys()[i]) + " " + camera +
+    trackfile.write('End ' + obs_number + " " + camera +
                     ' Duration: ' + str(duration_m) + ' m ' +
                     str(duration_s) + ' s ' + '\n')
     trackfile.close()

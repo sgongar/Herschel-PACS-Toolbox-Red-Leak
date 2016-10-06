@@ -1,3 +1,11 @@
+from os import getenv, path, mkdir
+from time import time
+from datetime import datetime
+from csv import reader
+from string import uppercase
+from massive_aux import get_formatted_time, save_exception
+from massive_aux import create_dictionary, populate_obs
+
 #  coding = utf-8
 #
 #  This file is part of Herschel Common Science System (HCSS).
@@ -57,3 +65,13 @@ def create_dictionary(obs_list):
         j = j + 1
         
     return obs_dict
+
+def populate_obs(obs_file):
+    # Populate list from csv file
+    obs_list = []
+    with open(str(csv_obs), 'rb') as f:
+        row_reader = reader(f, delimiter=',')
+        for row in row_reader:
+            obs_list.append(row[1])
+
+    return obs_list

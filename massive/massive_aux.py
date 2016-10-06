@@ -3,8 +3,6 @@ from time import time
 from datetime import datetime
 from csv import reader
 from string import uppercase
-from massive_aux import get_formatted_time, save_exception
-from massive_aux import create_dictionary, populate_obs
 
 #  coding = utf-8
 #
@@ -25,6 +23,8 @@ from massive_aux import create_dictionary, populate_obs
 #  Public License along with HCSS.
 #  If not, see <http://www.gnu.org/licenses/>.
 #
+
+
 def get_formatted_time():
     """ Return formatted time function
     """
@@ -36,6 +36,7 @@ def get_formatted_time():
 
 def save_exception(exception):
     """ Save expection to file
+    
     """
     print exception
 
@@ -66,10 +67,13 @@ def create_dictionary(obs_list):
         
     return obs_dict
 
+
 def populate_obs(obs_file):
-    # Populate list from csv file
+    """ Populate list from csv file
+    
+    """
     obs_list = []
-    with open(str(csv_obs), 'rb') as f:
+    with open(str(obs_file), 'rb') as f:
         row_reader = reader(f, delimiter=',')
         for row in row_reader:
             obs_list.append(row[1])

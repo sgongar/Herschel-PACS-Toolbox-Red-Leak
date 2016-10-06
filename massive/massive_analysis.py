@@ -37,10 +37,6 @@ csv_obs = str(working_dir) + 'obs_ids.csv'
 save_obs = False
 
 run_massive():
-    start_time = time.time()
-    start_time_hr = datetime.datetime.fromtimestamp(start_time)
-    start_time_hr = str(start_time_hr)
-
     if (not path.exists(working_dir)):
         mkdir(working_dir)
     if (not path.exists(pool_dir)):
@@ -63,6 +59,7 @@ run_massive():
     # TODO try-except raising all the problems to external file
     # Run pipeline over obs
     for i in range(len(obs_list)):
+        start_time = time()
         camera = 'red'
 
         obs_number = observations_dict.keys()[i]
@@ -71,19 +68,17 @@ run_massive():
 
         trackfile = open(trackfilename, 'a')
         trackfile.write("Processing observation " +
-                        str(obs_number) + " with camera " + camera +
+                        str(obs_number) + " with " + camera + " camera " +
                         " at " + str(get_formatted_time()) + "\n")
         trackfile.close()
 
         runPacsSpg(cameraList=[camera],
                    obsIn=observations_dictionary[obs_number])
 
-        name = 'obs_' + str(observations_dict.keys()[i])
-
         try:
             print "Saving observation: ", obs_number
             saveObservation(observations_dictionary[obs_number],
-                            poolLocation=pool_dir, poolName=name)
+                            poolLocation=pool_dir, poolName=obs_number)
             print "Observation saved"
         except Exception as e:
             save_exception(e)
@@ -118,7 +113,7 @@ run_massive():
                     str(duration_s) + ' s ' + '\n')
         trackfile.close()
 
-    duration = time.time() - start_time
+    duration = time() - start_time
     duration_m = int(duration/60)
     duration_s = duration - duration_m*60
 

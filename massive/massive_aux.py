@@ -1,4 +1,3 @@
-from os import getenv, path, mkdir
 from time import time
 from datetime import datetime
 from csv import reader
@@ -27,7 +26,8 @@ from string import uppercase
 
 def get_formatted_time():
     """ Return formatted time function
-    K
+    
+    @return time_hr: a time string formatted
     """
     time_hr = datetime.datetime.fromtimestamp(time())
     time_hr = str(time_hr)
@@ -44,24 +44,23 @@ def save_exception(exception):
     
 def create_dictionary(obs_list):
     """ Create dictionary from observations list
+    Esta funcion crea un diccionario cuyas keys son la
+    observaciones y los valores son un string del tipo XXX
+
 
     @param obs_list: a list which contains observation ids
-    @return: a dictionary which contains the observations
+    @return obs_dict: a dictionary which contains the observations
     """
     observations_dict = {}
-    i = 0
-    j = 0
-    k = 0
-    w = 0
+    i, j, k, w = (0, )*4
+    
     for i in range(len(obs_list)):
         if j == int(len(list(uppercase))):
             j = 0
-            k = k + 1
-
+            k += 1
         if k == int(len(list(uppercase))):
             k = 0
-            w = w + 1
-
+            w += 1
         obs_dict[obs_list[i]] = 'SED' +
                                 list(uppercase)[j] +
                                 list(uppercase)[k] +
@@ -74,7 +73,8 @@ def create_dictionary(obs_list):
 def populate_obs(obs_file):
     """ Populate list from csv file
     
-    @param: 
+    @param obs_file: location of csv file to be read
+    @return obs_list: a list which contains file observation ids
     """
     obs_list = []
     with open(str(obs_file), 'rb') as f:

@@ -27,6 +27,7 @@ from string import uppercase
 
 def get_formatted_time():
     """ Return formatted time function
+    K
     """
     time_hr = datetime.datetime.fromtimestamp(time())
     time_hr = str(time_hr)
@@ -43,7 +44,9 @@ def save_exception(exception):
     
 def create_dictionary(obs_list):
     """ Create dictionary from observations list
-    
+
+    @param obs_list: a list which contains observation ids
+    @return: a dictionary which contains the observations
     """
     observations_dict = {}
     i = 0
@@ -71,6 +74,7 @@ def create_dictionary(obs_list):
 def populate_obs(obs_file):
     """ Populate list from csv file
     
+    @param: 
     """
     obs_list = []
     with open(str(obs_file), 'rb') as f:

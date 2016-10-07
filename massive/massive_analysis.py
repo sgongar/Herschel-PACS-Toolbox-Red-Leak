@@ -3,8 +3,6 @@ from time import time
 from datetime import datetime
 from csv import reader
 from string import uppercase
-from massive_aux import get_formatted_time, save_exception
-from massive_aux import create_dictionary, populate_obs
 
 #  coding = utf-8
 #
@@ -24,19 +22,22 @@ from massive_aux import create_dictionary, populate_obs
 #  You should have received a copy of the GNU Lesser General
 #  Public License along with HCSS.
 #  If not, see <http://www.gnu.org/licenses/>.
-#
+
 
 # Load directories
 # In our case we assumed that ...
-home_dir = getenv("HOME")
-working_dir = str(home_dir) + '/hcss/workspace/Red-leak/'
-pool_dir = str(working_dir) + 'pools/'
-zips_dir = str(pool_dir) + 'zips/'
-csv_obs = str(working_dir) + 'obs_ids.csv'
+home_dir = str(getenv("HOME"))
+working_dir = home_dir + '/hcss/workspace/Red_Leak/'
+pool_dir = working_dir + 'pools/'
+zips_dir = pool_dir + 'zips/'
+csv_obs = working_dir + 'obs_ids/obs_ids_1.csv'
+trackfilename = working_dir + "RedLeakMultiObs.txt"
+massive_aux = working_dir + "massive/massive_aux.py"
 
 save_obs = False
+enable_log = False # useful?
 
-run_massive():
+def run_massive():
     if (not path.exists(working_dir)):
         mkdir(working_dir)
     if (not path.exists(pool_dir)):
@@ -44,40 +45,33 @@ run_massive():
     if (not path.exists(zips_dir)):
         mkdir(zips_dir)
 
-    obs_list = populate_obs(csv_obs)
-
     # Create file for tracking the progress
-    trackfilename = working_dir + "RedLeakMultiObs.txt"
-    trackfile = open(trackfilename, 'w')
-    trackfile.write("Starting process at %s \n" %(get_formatted_time()))
-    trackfile.close()
+    save_message("Starting process at %s \n" %(get_formatted_time()), 
+                 'w', trackfilename)
 
-    # Structure holding the final cubes for every pair [obsid,camera]
-    observations_dictionary = create_dictionary(obs_list)
+    obs_list = populate_obs(csv_obs)
+    observations_dict = create_dictionary(obs_list)
     finalCubeList = []
-
+    
+    start_total_time = time()
     # TODO try-except raising all the problems to external file
     # Run pipeline over obs
     for i in range(len(obs_list)):
-        start_time = time()
+        start_obs_time = time()
         camera = 'red'
 
         obs_number = observations_dict.keys()[i]
-        observations_dictionary[obs_number] = getObservation(obs_number,
-                                                             useHsa=1)
+        observations_dict[obs_number] = getObservation(obs_number, useHsa=1)
 
-        trackfile = open(trackfilename, 'a')
-        trackfile.write("Processing observation " +
-                        str(obs_number) + " with " + camera + " camera " +
-                        " at " + str(get_formatted_time()) + "\n")
-        trackfile.close()
+        save_message("Processing observation " + str(obs_number) +\
+                     " with " + camera + " camera " + " at " +\
+                     str(get_formatted_time()) + "\n", 'a', trackfilename)
 
-        runPacsSpg(cameraList=[camera],
-                   obsIn=observations_dictionary[obs_number])
+        runPacsSpg(cameraList=[camera], obsIn=observations_dict[obs_number])
 
         try:
             print "Saving observation: ", obs_number
-            saveObservation(observations_dictionary[obs_number],
+            saveObservation(observations_dict[obs_number],
                             poolLocation=pool_dir, poolName=obs_number)
             print "Observation saved"
         except Exception as e:
@@ -102,25 +96,24 @@ run_massive():
             save_exception(e)
             print "An exception was raised during compression process", e
 
-        duration = time.time() - actual_time
+        duration = time() - start_obs_time
         duration_m = int(duration/60)
         duration_s = duration - duration_m*60
 
         camera = 'red'
-        trackfile = open(trackfilename, 'a')
-        trackfile.write('End ' + obs_number + " " + camera +
-                        ' Duration: ' + str(duration_m) + ' m ' +
-                    str(duration_s) + ' s ' + '\n')
-        trackfile.close()
+        save_message('End ' + obs_number + " " + camera + ' Duration: ' +\
+                     str(duration_m) + ' m ' + str(duration_s) + ' s ' +\
+                     '\n'"END Total Duration: " + str(duration_m) + ' m ' +\
+                     str(duration_s) + ' s ' + "\n", 'a', trackfilename)
 
-    duration = time() - start_time
+    duration = time() - start_total_time
     duration_m = int(duration/60)
     duration_s = duration - duration_m*60
 
-    trackfile = open(trackfilename, 'a')
-    trackfile.write("END Total Duration: " +
-                str(duration_m) + ' m ' + str(duration_s) + ' s ' + "\n")
-    trackfile.close()
+    save_message("END Total Duration: " + str(duration_m) + ' m ' +\
+                 str(duration_s) + ' s ' + "\n", 'a', trackfilename)
+
 
 if __name__ == "__main__":
+    execfile(massive_aux) 
     run_massive()

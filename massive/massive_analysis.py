@@ -1,7 +1,5 @@
 from os import getenv, path, mkdir
 from time import time
-from datetime import datetime
-from csv import reader
 from string import uppercase
 
 #  coding = utf-8
@@ -29,27 +27,29 @@ from string import uppercase
 home_dir = str(getenv("HOME"))
 working_dir = home_dir + '/hcss/workspace/Red_Leak/'
 pool_dir = working_dir + 'pools/'
-zips_dir = pool_dir + 'zips/'
-csv_obs = working_dir + 'obs_ids/obs_ids_1.csv'
+obs_dir = working_dir + 'obs_ids/'
 trackfilename = working_dir + "RedLeakMultiObs.txt"
 massive_aux = working_dir + "massive/massive_aux.py"
 
 save_obs = False
 enable_log = False # useful?
 
-def run_massive():
+def run_massive(csv_file):
+    """
+    
+    @param csv_file: observations csv file to be analysed
+    @return True: return True if everything goes alright 
+    """
     if (not path.exists(working_dir)):
         mkdir(working_dir)
     if (not path.exists(pool_dir)):
         mkdir(pool_dir)
-    if (not path.exists(zips_dir)):
-        mkdir(zips_dir)
 
     # Create file for tracking the progress
     save_message("Starting process at %s \n" %(get_formatted_time()), 
                  'w', trackfilename)
 
-    obs_list = populate_obs(csv_obs)
+    obs_list = populate_obs(obs_dir + csv_file)
     observations_dict = create_dictionary(obs_list)
     finalCubeList = []
     
@@ -70,31 +70,32 @@ def run_massive():
         runPacsSpg(cameraList=[camera], obsIn=observations_dict[obs_number])
 
         try:
-            print "Saving observation: ", obs_number
+            print 'Saving observation: ', obs_number
             saveObservation(observations_dict[obs_number],
                             poolLocation=pool_dir, poolName=obs_number)
-            print "Observation saved"
+            print 'Observation saved'
         except Exception as e:
             save_exception(e)
-            print "An exception was raised during saving process ", e
+            print 'An exception was raised during saving process ', e
     
         try:
-            print "Exporting observation: ", obs_number
+            print 'Exporting observation: ', obs_number
             exportObservation(pool=PoolManager.getPool(obs_number), 
-                              urn=obs_number + ":herschel.ia.obs.ObservationContext:0",
+                              urn='urn:' + obs_number +\
+                                  ':herschel.ia.obs.ObservationContext:0',
                               dirout=pool_dir + "Export/" + obs_number)
         except Exception as e:
             save_exception(e)
-            print "An exception was raised during exporting process ", e
+            print 'An exception was raised during exporting process ', e
 
         try:
-            print "Compressing file for observation: ", obs_number
+            print 'Compressing file for observation: ', obs_number
             compress(inputpath=pool_dir + "Export/" + obs_number,
                      archive=pool_dir + obs_number + ".tgz", compression="TGZ")
         
         except Exception as e:
             save_exception(e)
-            print "An exception was raised during compression process", e
+            print 'An exception was raised during compression process', e
 
         duration = time() - start_obs_time
         duration_m = int(duration/60)
@@ -103,17 +104,25 @@ def run_massive():
         camera = 'red'
         save_message('End ' + obs_number + " " + camera + ' Duration: ' +\
                      str(duration_m) + ' m ' + str(duration_s) + ' s ' +\
-                     '\n'"END Total Duration: " + str(duration_m) + ' m ' +\
-                     str(duration_s) + ' s ' + "\n", 'a', trackfilename)
+                     '\n', 'a', trackfilename)
 
     duration = time() - start_total_time
     duration_m = int(duration/60)
     duration_s = duration - duration_m*60
 
-    save_message("END Total Duration: " + str(duration_m) + ' m ' +\
-                 str(duration_s) + ' s ' + "\n", 'a', trackfilename)
+    save_message('END Total Duration: ' + str(duration_m) + ' m ' +\
+                 str(duration_s) + ' s ' +'\n', 'a', trackfilename)
+
+    return True
 
 
 if __name__ == "__main__":
-    execfile(massive_aux) 
-    run_massive()
+    execfile(massive_aux)
+    try:
+        csv_file = raw_input("Enter csv file (default: obs_ids.csv):")
+        if csv_file == '':
+            csv_file = 'obs_ids.csv'
+        run_massive(csv_file)
+    except Exception as e:
+        save_exception(e)
+        print 'An exception was raised'

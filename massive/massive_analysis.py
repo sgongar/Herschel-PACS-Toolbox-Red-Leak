@@ -28,7 +28,7 @@ home_dir = str(getenv("HOME"))
 working_dir = home_dir + '/hcss/workspace/Red_Leak/'
 pool_dir = working_dir + 'pools/'
 obs_dir = working_dir + 'obs_ids/'
-trackfilename = working_dir + "RedLeakMultiObs.txt"
+trackfilename = working_dir + "RedLeakMultiObs_1.txt"
 massive_aux = working_dir + "massive/massive_aux.py"
 
 save_obs = False
@@ -117,7 +117,9 @@ def run_massive(csv_file):
 
 
 if __name__ == "__main__":
+    # Loads external functions
     execfile(massive_aux)
+    # Runs the massive function, asks for a csv file name
     try:
         csv_file = raw_input("Enter csv file (default: obs_ids.csv):")
         if csv_file == '':

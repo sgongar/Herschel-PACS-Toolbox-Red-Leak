@@ -73,7 +73,7 @@ from herschel.pacs.spg.pipeline.ProductSinkHandling import *
 from herschel.pacs.spg.pipeline.spg_spec_tools import *
 
 
-def replMap(product,key='redLeak'):
+def replMap(product, key='redLeak'):
      map = MapContext()
      map.refs[key] = ProductRef(product)
      return map
@@ -152,13 +152,13 @@ if lineSpec or shortRange:
     # 2. mask the line
     slicedCubes = maskLines(slicedCubes,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0,maskType="INLINE")
     # 3. do the flatfielding
-    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[55.,220.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
+    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[190.0,220.0], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
     # 4. Rename mask OUTLIERS to OUTLIERS_B4FF (specFlagOutliers would refuse to overwrite OUTLIERS) & deactivate mask INLINE
     slicedCubes.renameMask("OUTLIERS", "OUTLIERS_B4FF")
     slicedCubes = deactivateMasks(slicedCubes, String1d(["INLINE", "OUTLIERS_B4FF"]))
     del ffUpsample, width
 elif isRangeSpec(obs):
-    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False, selectedRange=[55.0, 220.0], calTree = calTree, copy = copyCube, wlIntervalKnots={1:2.0, 2:3.0, 3:2.0})
+    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False, selectedRange=[190.0, 220.0], calTree = calTree, copy = copyCube, wlIntervalKnots={1:2.0, 2:3.0, 3:2.0})
     copyCube = False
     maskNotFF = True
     slicedCubes = specFrames2PacsCube(slicedFrames)
@@ -258,6 +258,7 @@ if slicedRebinnedCubes.refs.size() > 0:
 #    slicedTable, slicedInterpolatedCubes, spectra1d, slicedDrizzledEquidistantCubes, slicedInterpolatedEquidistantCubes,
     slicedProjectedEquidistantCubes])
 
+    # level2 = obs.level2.copy()
     level2 = obs.level2.copy()
 
     #We are only changing the level2 cubes in the red, spectral tables are out

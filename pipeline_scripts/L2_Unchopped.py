@@ -74,6 +74,12 @@ from herschel.pacs.spg.pipeline import *
 from herschel.pacs.spg.pipeline.ProductSinkHandling import *
 from herschel.pacs.spg.pipeline.spg_spec_tools import *
 
+
+def replMap(product, key='redLeak'):
+     map = MapContext()
+     map.refs[key] = ProductRef(product)
+     return map
+
 #*******************************************************************************
 # Preparation
 #*******************************************************************************
@@ -150,10 +156,10 @@ if lineSpec or shortRange:
     slicedCubes = maskLines(slicedCubes,slicedRebinnedCubes, calTree = calTree, widthDetect=width, widthMask=width, threshold=10.0)
 
     # 3. do the flatfielding
-    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[55.,220.], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
+    slicedCubes = specFlatFieldLine(slicedCubes, calTree = calTree, scaling=1, maxrange=[190.0,220.0], slopeInContinuum=1, maxScaling=2., maskType="OUTLIERS_FF", offset=0)
     del ffUpsample, width
 elif isRangeSpec(obs):
-    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False, selectedRange=[55.0, 220.0], calTree = calTree, copy = copyCube, wlIntervalKnots={1:2.0, 2:3.0, 3:2.0})
+    slicedFrames = specFlatFieldRange(slicedFrames,useSplinesModel=True, excludeLeaks=False, selectedRange=[190.0, 220.0], calTree = calTree, copy = copyCube, wlIntervalKnots={1:2.0, 2:3.0, 3:2.0})
     copyCube = False
     maskNotFF = True
     slicedCubes = specFrames2PacsCube(slicedFrames)

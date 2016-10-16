@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import csv
-import sys
+from sys import argv
 from os import listdir, getcwd
 
 obs_ids = [1342186305, 1342186798, 1342186797, 1342187020, 1342188034,
@@ -9,7 +9,7 @@ obs_ids = [1342186305, 1342186798, 1342186797, 1342187020, 1342188034,
            1342199407, 1342199420, 1342199415, 1342199238, 1342199748,
            1342199746, 1342189410, 1342206850, 1342266982, 1342266981,
            1342214636, 1342214673, 1342220743, 1342220982, 1342220599,
-           1342221384, 1342221386, 1342220751, 1342221382, 1342221362,
+           1342221384, 1342221386, 1342221382, 1342221362, 1342266976,
            1342221364, 1342222076, 1342222100, 1342222084, 1342222194,
            1342222251, 1342222248, 1342223119, 1342222250, 1342223129,
            1342222765, 1342223104, 1342223124, 1342223106, 1342223102,
@@ -19,7 +19,7 @@ obs_ids = [1342186305, 1342186798, 1342186797, 1342187020, 1342188034,
            1342239376, 1342245246, 1342247009, 1342246394, 1342247784,
            1342247817, 1342249386, 1342249385, 1342249393, 1342249387,
            1342249392, 1342249390, 1342249391, 1342249384, 1342250904,
-           1342246641, 1342265446, 1342265445, 1342265672, 1342265684,
+           1342265446, 1342265445, 1342265672, 1342265684, 1342266922,
            1342265682, 1342265673, 1342265683, 1342265689, 1342265686,
            1342265674, 1342265676, 1342265681, 1342265675, 1342265685,
            1342265690, 1342265670, 1342265692, 1342265677, 1342265671,
@@ -35,11 +35,11 @@ obs_ids = [1342186305, 1342186798, 1342186797, 1342187020, 1342188034,
            1342267875, 1342267858, 1342267844, 1342267879, 1342267842,
            1342267881, 1342267843, 1342267859, 1342267874, 1342267870,
            1342267880, 1342267861, 1342267878, 1342267877, 1342267860,
-           1342270680, 1342270681, 1342209709, 1342209717, 1342229752,
+           1342270680, 1342270681, 1342209709, 1342229752, 1342266964,
            1342208907, 1342267869, 1342189612, 1342198300, 1342202589,
            1342203446, 1342208901, 1342208926, 1342209711, 1342209707,
            1342210384, 1342210399, 1342210824, 1342210827, 1342210834,
-           1342211537, 1342211693, 1342211842, 1342212220, 1342212600,
+           1342211537, 1342211693, 1342212220, 1342212600, 1342266968,
            1342212790, 1342213146, 1342213911, 1342213925, 1342214220,
            1342225586, 1342225580, 1342225849, 1342225993, 1342234063,
            1342235692, 1342236271, 1342236272, 1342250999, 1342251177,
@@ -56,8 +56,7 @@ obs_ids = [1342186305, 1342186798, 1342186797, 1342187020, 1342188034,
            1342259608, 1342262028, 1342262540, 1342262544, 1342262936,
            1342262945, 1342262958, 1342262967, 1342262981, 1342262976,
            1342263462, 1342263465, 1342263463, 1342263496, 1342266972,
-           1342266971, 1342266969, 1342266970, 1342266968, 1342266964,
-           1342266922, 1342266976]
+           1342266971, 1342266969, 1342266970]
 
 sed_obs = [1342188037, 1342188038, 1342188039, 1342188040, 1342188426,
            1342188427, 1342188428, 1342188429, 1342188430, 1342188431,
@@ -77,7 +76,7 @@ sed_obs = [1342188037, 1342188038, 1342188039, 1342188040, 1342188426,
            1342197902, 1342197903, 1342197904, 1342197905, 1342197906,
            1342197907, 1342198170, 1342198171, 1342198174, 1342198175,
            1342198176, 1342198177, 1342199145, 1342199146, 1342199233,
-           1342199234, 1342199235, 1342199290, 1342199291, 1342199292,
+           1342199234, 1342199290, 1342199291, 1342199292, 1342271057,
            1342199293, 1342199294, 1342199295, 1342199296, 1342199297,
            1342199298, 1342199412, 1342199413, 1342199417, 1342199418,
            1342199883, 1342199884, 1342202120, 1342202121, 1342202122,
@@ -159,7 +158,7 @@ sed_obs = [1342188037, 1342188038, 1342188039, 1342188040, 1342188426,
            1342229808, 1342229816, 1342229823, 1342230076, 1342230150,
            1342230151, 1342230999, 1342231000, 1342231001, 1342231002,
            1342231003, 1342231004, 1342231274, 1342231275, 1342231276,
-           1342231295, 1342231296, 1342231297, 1342231298, 1342231299,
+           1342231296, 1342231297, 1342231298, 1342231299, 1342271056,
            1342231300, 1342231302, 1342231303, 1342231304, 1342231305,
            1342231318, 1342231319, 1342231320, 1342231322, 1342231323,
            1342231413, 1342231414, 1342231415, 1342231416, 1342231417,
@@ -269,17 +268,57 @@ sed_obs = [1342188037, 1342188038, 1342188039, 1342188040, 1342188426,
            1342269914, 1342269915, 1342269916, 1342269917, 1342269918,
            1342269919, 1342269920, 1342269932, 1342269933, 1342270010,
            1342270344, 1342270345, 1342270346, 1342270347, 1342270348,
-           1342270639, 1342270771, 1342270772, 1342270773, 1342271055,
-           1342271056, 1342271057]
+           1342270639, 1342270771, 1342270772, 1342270773, 1342271055]
 
 
 obs_23 = [1342213138, 1342213762, 1342215667, 1342230909, 1342230907,
-          1342230906, 1342230908, 1342238514, 1342238351, 1342239373,
+          1342230906, 1342230908, 1342238514, 1342259561, 1342262769,
           1342245393, 1342245646, 1342253746, 1342218568, 1342253747,
           1342253745, 1342254935, 1342254953, 1342256261, 1342257285,
-          1342257798, 1342259561, 1342262769]
+          1342257798]
 
-def file_writer(file_name, list_name, list_to_save):
+
+def look():
+    observations_dict = {}
+    for i in range(len(obs_ids)):
+        observations_dict[str(obs_ids[i])] = 'obs_ids'
+    for j in range(len(sed_obs)):
+        observations_dict[str(sed_obs[j])] = 'sed_obs'
+    for k in range(len(obs_23)):
+        observations_dict[str(obs_23[k])] = 'obs_23'
+
+    observations_to_check = observations_dict.keys()
+   
+    list_unchopped = []
+    list_chopped = []
+    list_wrong = []
+
+    # datos = obs.meta['rangeLow2'].value
+
+    for i in range(len(observations_to_check)):
+        print "Checking ", observations_to_check[i]
+        obs = getObservation(observations_to_check[i], useHsa=1)
+        high = obs.meta['rangeHigh1'].value
+        print high
+        if (int(high) - 190)< 0:
+            print "bajo"
+        """ 
+        if 'Mapping' in datos:
+            list_unchopped.append(observations_to_check[i])
+            print "mapping"
+        elif 'Chopped' in datos:
+            list_chopped.append(observations_to_check[i])
+        else:
+            list_wrong.append(observations_to_check[i])
+        """
+    print len(list_unchopped)
+    print list_unchopped
+    # print len(list_chopped)
+    # print len(list_wrong)
+
+    print list_wrong
+
+def file_writer(file_name, list_to_save, list_number):
     """ write a defined number of csv files
     
     @param file_name:
@@ -287,16 +326,41 @@ def file_writer(file_name, list_name, list_to_save):
     @param list_to_save:
     @return True: if everything goes alright
     """
-    f = open(file_name, 'wt')
-    try:
-        writer = csv.writer(f)
-        for i in range(len(list_to_save)):
-            writer.writerow((list_name, list_to_save[i]))
-    finally:
-        f.close()
+    
+    if list_to_save == 'all':
+        index_obs = []
+        j = 0
+        i = 0
+        full_obs = obs_ids + sed_obs + obs_23
+
+        size = len(full_obs)/int(list_number)
+        # dividir en cachso
+        list_obs = [full_obs[i:i+size] for i in range(0, len(full_obs), size)]
+        print len(list_obs)
+        for i in range(len(list_obs)):
+            print len(list_obs[i])
+            f = open(file_name + '_' + str(i) + '.csv', 'wt')
+            try:
+                writer = csv.writer(f)
+                print len(list_obs[i])
+                print list_obs[i]
+                for j in range(len(list_obs[i])):
+                    print list_obs[i][j]
+                    writer.writerow(('all', list_obs[i][j]))
+            finally:
+                f.close()    
+"""    
+else:
+        f = open(file_name, 'wt')
+        try:
+            writer = csv.writer(f)
+            for i in range(len(list_to_save)):
+                writer.writerow((list_name, list_to_save[i]))
+        finally:
+            f.close()
     
     return True
-
+"""
 def file_checker_against_problems():
     """
     
@@ -384,18 +448,22 @@ def count_obs():
 
 
 if __name__ == "__main__":
-    # try:
-	if sys.argv[1] == '-writer':
-	    file_name = sys.argv[2]
-	    file_writer(file_name)
-	elif sys.argv[1] == '-checker_problems':
-	    file_checker_against_problems()
-	elif sys.argv[1] == '-checker_done':
-	    file_checker_against_done()
-	elif sys.argv[1] == '-count':
-	    count_obs()
-	else:
-	    print "Wrong option"
-    # except Exception as e:
-	# print e
-        # print "Choose an option!"
+    try:
+        if argv[1] == '-writer':
+            file_name = argv[2]
+            list_to_save = argv[3]
+            list_number = argv[4]
+            file_writer(file_name, list_to_save, list_number)
+        elif argv[1] == '-checker_problems':
+            file_checker_against_problems()
+        elif argv[1] == '-checker_done':
+            file_checker_against_done()
+        elif argv[1] == '-count':
+            count_obs()
+        elif argv[1] == '-look':
+            look()
+        else:
+            print "Wrong option"
+    except Exception as e:
+        look()
+

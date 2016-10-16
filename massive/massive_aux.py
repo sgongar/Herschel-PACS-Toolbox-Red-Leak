@@ -21,6 +21,7 @@ from string import uppercase
 #  You should have received a copy of the GNU Lesser General
 #  Public License along with HCSS.
 #  If not, see <http://www.gnu.org/licenses/>.
+#
 
 
 def get_formatted_time():
@@ -36,7 +37,6 @@ def get_formatted_time():
 
 def save_message(message, mode, file):
     """ save a message to a file
-
     """
     message_file = open(file, mode)
     message_file.write(message)
@@ -53,6 +53,9 @@ def save_exception(exception):
     
 def create_dictionary(obs_list):
     """ Create dictionary from observations list
+    Esta funcion crea un diccionario cuyas keys son la
+    observaciones y los valores son un string del tipo XXX
+
 
     @param obs_list: a list which contains observation ids
     @return obs_dict: a dictionary which contains the observations
@@ -69,7 +72,7 @@ def create_dictionary(obs_list):
             w += 1
         obs_dict[obs_list[i]] = 'SED' + list(uppercase)[j] +\
                                 list(uppercase)[k] + list(uppercase)[w]
-        j += 1
+        j = j + 1
         
     return obs_dict
 

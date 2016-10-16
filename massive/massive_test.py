@@ -1,6 +1,14 @@
 from os import getenv, path, mkdir
 from time import time
 from string import uppercase
+from shutil import rmtree
+
+obs_ok = ['1342199235', '1342211842', '1342220751', '1342231295', '1342238351',
+          '1342239373', '1342246641', '1342209717', '1342220931', '1342225820',
+          '1342225821', '1342228538', '1342229752', '1342250904', '1342238905',
+          '1342238906', '1342252090', '1342252092', '1342253738', '1342254274',
+          '1342254275', '1342208926', '1342212512']
+
 
 #  coding = utf-8
 #
@@ -28,7 +36,7 @@ home_dir = str(getenv("HOME"))
 working_dir = home_dir + '/hcss/workspace/Red_Leak/'
 pool_dir = working_dir + 'pools/'
 obs_dir = working_dir + 'obs_ids/'
-trackfilename = working_dir + "RedLeakMultiObs_1.txt"
+trackfilename = working_dir + "RedLeakMultiObs_test.txt"
 massive_aux = working_dir + "massive/massive_aux.py"
 
 save_obs = False
@@ -48,8 +56,14 @@ def run_massive(csv_file):
     # Create file for tracking the progress
     save_message("Starting process at %s \n" %(get_formatted_time()), 
                  'w', trackfilename)
-
+    """ 
     obs_list = populate_obs(obs_dir + csv_file)
+    for i in range(len(obs_ok)):
+        if obs_ok[i] in obs_list:
+            obs_list.remove(obs_ok[i])
+    """
+    obs_list = ['1342244469']
+
     observations_dict = create_dictionary(obs_list)
     finalCubeList = []
     
@@ -106,6 +120,18 @@ def run_massive(csv_file):
                      str(duration_m) + ' m ' + str(duration_s) + ' s ' +\
                      '\n', 'a', trackfilename)
 
+        try:
+            rmtree(pool_dir + "Export/" + obs_number)
+        except Exception as e:
+            save_exception(e)
+            print 'An exception was raised while removing struct dir', e
+
+        try:
+            rmtree(pool_dir + obs_number)
+        except Exception as e:
+            save_exception(e)
+            print 'An exception was raised while removing standard dir', e
+
     duration = time() - start_total_time
     duration_m = int(duration/60)
     duration_s = duration - duration_m*60
@@ -124,6 +150,7 @@ if __name__ == "__main__":
         csv_file = raw_input("Enter csv file (default: obs_ids.csv):")
         if csv_file == '':
             csv_file = 'obs_ids.csv'
+        print csv_file
         run_massive(csv_file)
     except Exception as e:
         save_exception(e)

@@ -117,6 +117,7 @@ def run_massive(csv_file):
                      str(duration_m) + ' m ' + str(duration_s) + ' s ' +\
                      '\n', 'a', trackfilename)
 
+        """
         try:
             rmtree(pool_dir + "Export/" + obs_number)
         except Exception as e:
@@ -128,7 +129,7 @@ def run_massive(csv_file):
         except Exception as e:
             save_exception(e)
             print 'An exception was raised while removing standard dir', e
-
+        """
     duration = time() - start_total_time
     duration_m = int(duration/60)
     duration_s = duration - duration_m*60

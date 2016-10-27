@@ -3,15 +3,6 @@ import csv
 from sys import argv
 from os import listdir, getcwd
 
-wrong_obs = ['1342245455', '1342245456', '1342188941', '1342251034', 
-             '1342220740', '1342189072', '1342245809', '1342193212',
-             '1342203453', '1342203454', '1342204124', '1342204125',
-             '1342197805', '1342193205', '1342197804', '1342197803',
-             '1342193204']
-
-
-
-# obs_done = 
 
 obs_ids = [1342186305, 1342186798, 1342186797, 1342187020, 1342188034,
            1342188526, 1342189411, 1342187779, 1342266969, 1342266970,
@@ -196,14 +187,14 @@ def look():
         observations_dict[str(obs_23[k])] = 'obs_23'
 
     observations_to_check = observations_dict.keys()
-   
+
     print "para mirar tengo ", len(observations_to_check)
 
     print len(observations_to_check)*2
   
     list_mapping = []
 
-    # datos = obs.meta['rangeLow2'].value
+
 
     for i in range(len(observations_to_check)):
         # print "Checking ", observations_to_check[i]
@@ -223,7 +214,7 @@ def look():
                         pass
                     else:
                         print "chopnod range mapping", observations_to_check[i]
-        """
+
         if str(obs.meta['obsMode'].value) == 'Pointed':
             if 'Range' in str(obs.meta['observingMode']):
                 if 'Unchopped' in str(obs.meta['observingMode']):
@@ -236,11 +227,7 @@ def look():
                     if 'SED' in str(obs.meta['rangeSPOT'].value):
                         pass
                     else:
-                        print "chopnod range pointed", observations_to_check[i]
-        """
-"""
-# HIPE> print sed_obs_b.meta['observingMode'].value
-        
+                        print "chopnod range pointed", observations_to_check[i]        
         
         if str(obs.quality.meta['state'].value) != 'PENDING':
             list_wrong.append(observations_to_check[i])
@@ -250,6 +237,7 @@ def look():
 
 
     for i in range(len(observations_to_check)):
+        # Check if there is data in our study's range
         print "Checking ", observations_to_check[i]
         obs = getObservation(observations_to_check[i], useHsa=1)
         j = 1
@@ -265,12 +253,8 @@ def look():
 
         if ok is True:
             list_right.append(observations_to_check[i])
-            # print "ok is: ", ok
-            # print len(list_right)
         elif os is not True:
             list_wrong.append(observations_to_check[i])
-            # print "ok is: ", ok
-            # print len(list_wrong)
         else:
             raise Exception
 
@@ -278,7 +262,6 @@ def look():
     try:
         writer = csv.writer(file_right)
         for j in range(len(list_right)):
-            # print list_right[i]
             writer.writerow(('right', list_right[j]))
     finally:
         file_right.close()
@@ -287,7 +270,6 @@ def look():
     try:
         writer = csv.writer(file_wrong)
         for k in range(len(list_wrong)):
-            # print list_wrong[i]
             writer.writerow(('wrong', list_wrong[k]))
     finally:
         file_wrong.close()    
@@ -298,7 +280,7 @@ def look():
     last_time = time()
 
     print last_time-first_time
-"""
+
 def file_writer(file_name, list_to_save, list_number):
     """ write a defined number of csv files
     
@@ -307,7 +289,7 @@ def file_writer(file_name, list_to_save, list_number):
     @param list_to_save:
     @return True: if everything goes alright
     """
-    
+
 
     if list_to_save == 'all':
         obs_done = []
@@ -324,8 +306,6 @@ def file_writer(file_name, list_to_save, list_number):
                 
         print len(obs_done)
         print len(full_obs)
-        # print obs_done
-        # print full_obs
         for i in range(len(obs_done)):
             # print obs_done[i]
             if obs_done[i] in full_obs:
@@ -341,10 +321,7 @@ def file_writer(file_name, list_to_save, list_number):
             f = open(file_name + '_' + str(i) + '.csv', 'wt')
             try:
                 writer = csv.writer(f)
-                # print len(list_obs[i])
-                # print list_obs[i]
                 for j in range(len(list_obs[i])):
-                    # print list_obs[i][j]
                     writer.writerow(('all', list_obs[i][j]))
             finally:
                 f.close()
@@ -375,16 +352,13 @@ def file_checker_against_problems():
             raise Exception
     
     observations_dict = {}
-    """
+
     for i in range(len(obs_ids)):
         observations_dict[str(obs_ids[i])] = 'obs_ids'
-    """
     for j in range(len(sed_obs)):
-        observations_dict[str(sed_obs[j])] = 'sed_obs'
-    """
+        observations_dict[str(sed_obs_A[j])] = 'sed_obs'
     for k in range(len(obs_23)):
         observations_dict[str(obs_23[k])] = 'obs_23'
-    """
 
     observations_to_check = observations_dict.keys()
     for w in range(len(files_list)):
@@ -407,7 +381,7 @@ def file_checker_against_done():
     """
 
     """
-    files_list = listdir('/data/pools')
+    files_list = listdir('/data/pools/tgz/')
 
     for i in range(len(files_list)):
         if len(files_list[i]) == 28:
@@ -422,7 +396,7 @@ def file_checker_against_done():
     for i in range(len(obs_ids)):
         observations_dict[str(obs_ids[i])] = 'obs_ids'
     for j in range(len(sed_obs)):
-        observations_dict[str(sed_obs[j])] = 'sed_obs'
+        observations_dict[str(sed_obs_A[j])] = 'sed_obs'
     for k in range(len(obs_23)):
         observations_dict[str(obs_23[k])] = 'obs_23'
 
@@ -442,11 +416,11 @@ def count_obs():
 
     """
     print "Observations above 190: ", len(obs_ids)
-    print "SED observations: ", len(sed_obs)
+    print "SED observations: ", len(sed_obs_A)
     print "Range 23 observations: ", len(obs_23)
     print " "
-    print "Total observations to be analysed: ", (len(obs_ids) + len(sed_obs) + len(obs_23))
-    print "Observations correctly analysed: ", len(listdir('/data/pools'))
+    print "Total observations to be analysed: ", (len(obs_ids) + len(sed_obs_A) + len(obs_23))
+    print "Observations correctly analysed: ", len(listdir('/data/pools/tgz/'))
 
 
 if __name__ == "__main__":
@@ -467,6 +441,6 @@ if __name__ == "__main__":
         else:
             print "Wrong option"
     except Exception as e:
-        # print e
+        # 
         look()
 

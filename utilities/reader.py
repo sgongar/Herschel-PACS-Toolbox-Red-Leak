@@ -3,7 +3,7 @@ import csv
 from sys import argv
 from os import listdir, getenv
 from time import time
-from reader_aux import *
+from reader_aux import obs_ids, sed_obs_A, obs_23
 
 
 def look_for_characteristics():
@@ -21,12 +21,8 @@ def look_for_characteristics():
         observations_dict[str(obs_23[k])] = 'obs_23'
 
     observations_to_check = observations_dict.keys()
-  
-    list_mapping = []
-
 
     for i in range(len(observations_to_check)):
-        # print "Checking ", observations_to_check[i]
         obs = getObservation(observations_to_check[i], useHsa=1)
 
         if str(obs.meta['obsMode'].value) == 'Mapping':
@@ -56,7 +52,7 @@ def look_for_characteristics():
                     if 'SED' in str(obs.meta['rangeSPOT'].value):
                         pass
                     else:
-                        print "chopnod range pointed", observations_to_check[i]        
+                        print "chopnod range pointed", observations_to_check[i]
 
         if str(obs.quality.meta['state'].value) != 'PENDING':
             list_wrong.append(observations_to_check[i])
@@ -76,10 +72,8 @@ def look_for_characteristics():
         for k in range(len(list_wrong)):
             writer.writerow(('wrong', list_wrong[k]))
     finally:
-        file_wrong.close()    
+        file_wrong.close()
 
-    print "mala lista es ", len(list_wrong)
-  
     last_time = time()
     total_time = str(last_time - first_time)
     print "Process takes %S s to be completed", total_time
@@ -88,6 +82,7 @@ def look_for_characteristics():
 def look_for_range(working_dir):
     """
 
+    @param working_dir: string pointing working directory
     """
     first_time = time()
     print "Starting checking process at", str(first_time)
@@ -153,40 +148,38 @@ def look_for_range(working_dir):
 def file_writer(file_name, list_to_save, list_number, pools_dir):
     """ write a defined number of csv files
 
-    @param file_name:
-    @param list_name:
-    @param list_to_save:
+    @param file_name: output file name
+    @param list_to_save: list to be saved in csv files
+    @param list_number: number of lists to be created
+    @param pools_dir: string pointing pool's directory
     @return True: if everything goes alright
     """
 
-
     if list_to_save == 'all':
         obs_done = []
-        index_obs = []
-      
+
         j = 0
         i = 0
         full_obs = obs_ids + sed_obs_A + obs_23
 
+        # Obtiene una lista con los ficheros existentes
+        # estos tienen que estar en el siguiente buscador
         obs_raw = listdir(pools_dir)
 
         for i in range(len(obs_raw)):
             if obs_raw[i][-11:] != '_struct.tgz':
                 obs_done.append(int(obs_raw[i][:-4]))
-                
-        print len(obs_done)
-        print len(full_obs)
+
         for i in range(len(obs_done)):
             # print obs_done[i]
             if obs_done[i] in full_obs:
                 full_obs.remove(obs_done[i])
-        print len(full_obs)
 
-        size = len(full_obs)/int(list_number)
-        # dividir en cachso
+        size = len(full_obs) / int(list_number)
+        # Split full_obs in a list of lists
         list_obs = [full_obs[i:i + size] for i in range(0, len(full_obs),
                                                         size)]
-        print len(list_obs)
+
         for i in range(len(list_obs)):
             print len(list_obs[i])
             f = open(file_name + '_' + str(i) + '.csv', 'wt')
@@ -197,11 +190,21 @@ def file_writer(file_name, list_to_save, list_number, pools_dir):
             finally:
                 f.close()
     else:
-        f = open(file_name, 'wt')
+        print list_to_save + '_' + file_name
+        if list_to_save == 'obs_23':
+            list_obs = obs_23
+        elif list_to_save == 'obs_ids':
+            list_obs = obs_ids
+        elif list_to_save == 'sed_obs_A':
+            list_obs = sed_obs_A
+        else:
+            raise Exception
+
+        f = open(list_to_save + '_' + file_name + '.csv', 'wt')
         try:
             writer = csv.writer(f)
-            for i in range(len(list_to_save)):
-                writer.writerow((list_to_save, list_to_save[i]))
+            for i in range(len(list_obs)):
+                writer.writerow((list_to_save, list_obs[i]))
         finally:
             f.close()
 
@@ -212,6 +215,7 @@ def file_checker_against_problems():
     """
 
     @param
+    @return True: if everything goes alright
     """
     files_list = listdir('/data/pools')
 
@@ -245,8 +249,7 @@ def file_checker_against_problems():
     for x in range(len(observations_failed)):
         observations_to_check.remove(observations_failed[x])
 
-    print observations_to_check    
-    print len(observations_to_check)
+    return True
 
 
 def file_checker_against_done(pools_dir):
@@ -286,16 +289,21 @@ def file_checker_against_done(pools_dir):
                 observations_to_check, 10)
 
 
-def count_obs():
+def count_obs(pools_dir):
     """
 
+    @param pools_dir: string pointing pool's directory
+    @return True: if everything goes alright
     """
     print "Observations above 190: ", len(obs_ids)
     print "SED observations: ", len(sed_obs_A)
     print "Range 23 observations: ", len(obs_23)
     print " "
-    print "Total observations to be analysed: ", (len(obs_ids) + len(sed_obs_A) + len(obs_23))
-    print "Observations correctly analysed: ", len(listdir('/data/pools/tgz/'))
+    print "Total observations to be analysed: ", (len(obs_ids) +
+                                                  len(sed_obs_A) + len(obs_23))
+    print "Observations correctly analysed: ", len(listdir(pools_dir))
+
+    return True
 
 
 if __name__ == "__main__":
@@ -321,4 +329,6 @@ if __name__ == "__main__":
             print "Wrong option"
     except Exception as e:
         # Excepcion creada para correr en HIPE
-        look_for_range()
+        # look_for_range(working_dir)
+        print e
+
